@@ -577,12 +577,12 @@ check_spatial_agg_args <- function(args, verbose = 1) {
 #'
 #' @examples
 #'   # Assuming 'your_subdaily_raster' is a SpatRaster containing hourly data:
-#'   daily_aggregated_raster <- aggregation_to_daily(your_subdaily_raster, fun = "mean")
+#'   daily_aggregated_raster <- agg_to_daily(your_subdaily_raster, fun = "mean")
 #'
 #'   # Alternatively, to compute daily sums instead:
-#'   daily_sum_raster <- aggregation_to_daily(your_subdaily_raster, fun = "sum")
-
-aggregation_to_daily <- function(subdaily_raster, fun = "none") {
+#'   daily_sum_raster <- agg_to_daily(your_subdaily_raster, fun = "sum")
+#' @export
+agg_to_daily <- function(subdaily_raster, fun = "none") {
 
   if (fun == "none") {
     message("\n     No daily aggregation function provided. Skipping aggregation to daily")

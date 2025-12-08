@@ -41,6 +41,11 @@ NULL
 #'                   function (e.g., Boundary.knots for splines). Optional. The provided degree, breaks, or knots
 #'                   parameters will be automatically added to this list, depending on the trans_type.
 #'
+#' @param daily_agg_fun A character string specifying the subdaily aggregation function for hourly data.
+#'                          Options are "none" (default, no aggregation), "mean", or "sum". 
+#'                          If the input data is hourly or subdaily, this aggregates to daily values first.
+#'                          If "none" or input data is already daily/monthly/yearly, no subdaily aggregation is performed.
+#'
 #' @param out_temp_res A character string specifying the output temporal resolution.
 #'                     Options are "daily", "monthly", or "yearly" (required).
 #'
@@ -80,7 +85,7 @@ NULL
 #' @param save_console_output A logical value indicating whether to save console output
 #'                           to a log file (default is FALSE).
 #'                           
-#' @param save_batch_output Logical indicating whether to save intermediate batch outputs to disk for memory efficiency (default: TRUE).
+#' @param save_batch_output Logical indicating whether to save intermediate batch outputs to disk for memory efficiency (default: FALSE).
 #' 
 #' @param overwrite_batch_output Logical indicating whether to overwrite existing batch files. When FALSE, existing files
 #'                                are validated to ensure layer counts match current processing parameters (default: FALSE).
@@ -124,6 +129,7 @@ r2e2 <- function(env_rast,
                  breaks = NULL,
                  knots = NULL,
                  trans_args = list(),
+                 daily_agg_fun = "none",
                  out_temp_res,
                  temp_agg_fun = "mean",
                  sec_weight_rast = NULL,
@@ -134,7 +140,7 @@ r2e2 <- function(env_rast,
                  max_cells = 3e7,
                  metadata = NULL,
                  save_console_output = FALSE,
-                 save_batch_output = TRUE,
+                 save_batch_output = FALSE,
                  overwrite_batch_output = FALSE,
                  compression = 'zstd',
                  validation = TRUE,
@@ -189,6 +195,12 @@ r2e2 <- function(env_rast,
     if (!save_path_provided) {
       message("  No save_path provided. Results will be returned without saving.")
     }
+    if (!save_batch_output) {
+      message("  Intermediate outputs will not be saved, for large datasets consider enabling save_batch_output.")
+    } else if (save_batch_output && save_path_provided) {
+      message("  Batch output saving enabled. Intermediate outputs will be temporarilly saved to disk for memory efficiency.")
+    }
+
   } else if (verbose >= 2) {
     message("===========================================================================",
             "\n 1. Input Validation",
@@ -220,6 +232,7 @@ r2e2 <- function(env_rast,
       boundary_dates = boundary_dates,
       trans_args = trans_args,
       spatial_agg_args = spatial_agg_args,
+      daily_agg_fun = daily_agg_fun,
       out_temp_res = out_temp_res,
       temp_agg_fun = temp_agg_fun,
       metadata = metadata
@@ -320,6 +333,13 @@ r2e2 <- function(env_rast,
   
   # Clean up large objects no longer needed
   gc(verbose = FALSE)
+  
+  
+  ## ---- 1.3a Aggregate subdaily data to daily if needed ---------------------------------------------------------
+  
+  if (daily_agg_fun != "none") {
+    env_rast <- agg_to_daily(env_rast, fun = daily_agg_fun)
+  }
 
 
   ## ---- 1.4 Handle boundary dates ---------------------------------------------------------
