@@ -717,7 +717,7 @@ infer_num_trans_var <- function(trans_type, trans_args) {
 #'   # will be reattached.
 #'   cleaned_DT <- clean_spatial_agg_output(spatial_agg_raw, env_rast_time_steps, "geom_id")
 #' }
-clean_spatial_agg_output <- function(extraction_result, time_steps, polygons, geom_id_col, verbose = 1) {
+clean_spatial_agg_output <- function(extraction_result, time_steps, geometry, geom_id_col, verbose = 1) {
   
   # Convert extraction_result to a data.table
   extraction_dt <- as.data.table(extraction_result)
@@ -745,7 +745,7 @@ clean_spatial_agg_output <- function(extraction_result, time_steps, polygons, ge
   time_step_names <- as.character(time_steps)
   
   # Get the polygon IDs using the metadata specification.
-  geom_id_vector <- polygons[[ geom_id_col ]]
+  geom_id_vector <- geometry[[ geom_id_col ]]
   
   # Split the aggregated columns into blocks corresponding to each transformation variable.
   agg_mat <- as.matrix(extraction_dt)
@@ -785,20 +785,20 @@ clean_spatial_agg_output <- function(extraction_result, time_steps, polygons, ge
 #' @param raster_subset A raster object or a subset of a raster to be processed.
 #' @param trans_fun A transformation function to be applied to the raster subset.
 #' @param checked_trans_args A list of pre-validated arguments for the transformation function.
-#' @param polygons An sf object containing spatial polygons over which the aggregation is performed.
+#' @param geometry An sf object containing spatial geometries (polygons or points) over which the aggregation is performed.
 #' @param agg_weights A raster or a character string (e.g., "area") used as weights in the spatial aggregation.
 #' @param spatial_agg_args A list of arguments to pass to `exact_extract` for spatial aggregation (e.g., aggregation function, stack_apply).
-#' @param geom_id_col The name of the column in the polygons object that identifies each polygon.
+#' @param geom_id_col The name of the column in the geometry object that identifies each geometry.
 #' @param verbose Integer verbosity level (0 = silent, 1 = concise, 2 = detailed).
 #'
-#' @return A cleaned spatial aggregation output as a data table (or data frame) containing the polygon identifiers and aggregated values for each time step.
+#' @return A cleaned spatial aggregation output as a data table (or data frame) containing the geometry identifiers and aggregated values for each time step.
 #'
 #' @examples
 #' \dontrun{
 #'   result <- trans_spatial_agg_polygons(raster_subset, trans_fun, checked_trans_args,
-#'                                    polygons, agg_weights, spatial_agg_args, geom_id_col, verbose = 1)
+#'                                    geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1)
 #' }
-trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_args, polygons, agg_weights, spatial_agg_args, geom_id_col, verbose = 1) {
+trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_args, geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1) {
   
   step2_start <- Sys.time()
   
@@ -829,7 +829,7 @@ trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_a
   }
   spatial_agg_raw <- do.call(exact_extract,
                              c(list(x = transformed_raster_subset,
-                                    y = polygons,
+                                    y = geometry,
                                     weights = agg_weights),
                                spatial_agg_args,
                                progress = FALSE))
@@ -846,7 +846,7 @@ trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_a
   # raster_time_steps <- as.Date(names(raster_subset))
   raster_time_steps <- names(raster_subset)
   
-  spatial_agg_clean <- clean_spatial_agg_output(spatial_agg_raw, raster_time_steps, polygons, geom_id_col, verbose)
+  spatial_agg_clean <- clean_spatial_agg_output(spatial_agg_raw, raster_time_steps, geometry, geom_id_col, verbose)
   step4_end <- Sys.time()
   if (verbose == 2) {
     message("          Finished. Elapsed time: ",
@@ -1287,7 +1287,7 @@ trans_spatial_agg <- function(env_rast_list,
             raster_subset = raster_batch,
             trans_fun = trans_fun,
             checked_trans_args = checked_trans_args,
-            polygons = polygons,
+            geometry = polygons,
             agg_weights = agg_weights,
             spatial_agg_args = spatial_agg_args,
             geom_id_col = geom_id_col,

@@ -182,13 +182,13 @@ test_that("r2e2 pipeline works with subdaily_agg_fun parameter", {
   }
   
   # Load test polygons
-  polygons <- read_spatial_file(testthat::test_path("fixtures", "data", "polygons.gpkg"))
+  geometry <- read_spatial_file(testthat::test_path("fixtures", "data", "polygons.gpkg"))
   
   # Run r2e2 with subdaily aggregation
   exposures <- suppressMessages(
     r2e2(
       env_rast = hourly_rast,
-      polygons = polygons,
+      geometry = geometry,
       geom_id_col = "geom_id",
       trans_type = "none",
       daily_agg_fun = "mean",  # Aggregate hourly to daily

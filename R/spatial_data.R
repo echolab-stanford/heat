@@ -142,19 +142,24 @@ check_raster_layers <- function(raster, raster_name = "raster", verbose = 1) {
 #' Get Valid Raster Files
 #'
 #' @description
-#'   This function searches for raster files with specific extensions in a given folder,
+#'   This function searches for raster files with specific extensions (.tif, .nc) in a given folder,
 #'   checking whether they can be read into R. It returns a list of accessible raster files 
 #'   while printing warnings for any files that cannot be read.
 #'
-#' @param:
-#'   - path: A character string specifying the path to the folder containing raster files.
-#'   - pattern: A character string specifying the file pattern to match (default is "\\.tif$|\\.nc$").
+#' @param path A character string specifying the path to the folder containing raster files.
+#' @param pattern A character string specifying the file pattern to match (default is "\\.tif$|\\.nc$" 
+#'   for GeoTIFF and NetCDF files).
 #'
-#' @return:
-#'   - A character vector containing paths to the valid raster files that can be read.
+#' @return A character vector containing paths to the valid raster files that can be read.
 #'
 #' @examples
-#'   valid_rasters <- get_valid_raster_files(paths$path_env_rast)
+#' \dontrun{
+#'   # Get all valid .tif and .nc files
+#'   valid_rasters <- get_valid_raster_files("path/to/rasters/")
+#'   
+#'   # Get only NetCDF files
+#'   nc_files <- get_valid_raster_files("path/to/rasters/", pattern = "\\.nc$")
+#' }
 get_valid_raster_files <- function(path, pattern = "\\.tif$|\\.nc$") {
   # Identify all raster files in the folder with full paths
   rast_files <- list.files(
@@ -283,32 +288,32 @@ read_spatial_file <- function(file_path, validate = TRUE) {
   # Read based on format
   if (file_ext %in% c("parquet", "pq")) {
     message("Reading Parquet file: ", file_path)
-    polygons_df <- arrow::read_parquet(file_path)
+    geometry_df <- arrow::read_parquet(file_path)
     
-    if (!("geometry" %in% names(polygons_df)) && !("geom" %in% names(polygons_df))) {
+    if (!("geometry" %in% names(geometry_df)) && !("geom" %in% names(geometry_df))) {
       stop("Error: No geometry column found in Parquet file")
     }
     
-    if ("geometry" %in% names(polygons_df)) {
-      polygons_df$geometry <- st_as_sfc(polygons_df$geometry)
+    if ("geometry" %in% names(geometry_df)) {
+      geometry_df$geometry <- st_as_sfc(geometry_df$geometry)
     } else {
-      polygons_df$geom <- st_as_sfc(polygons_df$geom)
+      geometry_df$geom <- st_as_sfc(geometry_df$geom)
     }
     
-    polygons <- st_as_sf(polygons_df, crs = "WGS84")
+    geometry <- st_as_sf(geometry_df, crs = "WGS84")
     
   } else if (file_ext == "rds") {
     message("Reading RDS file: ", file_path)
-    polygons <- readRDS(file_path)
+    geometry <- readRDS(file_path)
     
     # Check if the loaded object is an sf object
-    if (!inherits(polygons, "sf")) {
+    if (!inherits(geometry, "sf")) {
       stop("Error: RDS file does not contain an sf object")
     }
     
   } else if (file_ext %in% c("gpkg", "shp", "geojson", "json", "fgb")) {
     message("Reading spatial file: ", file_path)
-    polygons <- st_read(file_path, quiet = TRUE)
+    geometry <- st_read(file_path, quiet = TRUE)
     
   } else {
     stop("Error: Unsupported file format - ", file_ext)
@@ -316,10 +321,10 @@ read_spatial_file <- function(file_path, validate = TRUE) {
 
   # Optionally validate and clean using check_spatial_file()
   if (validate) {
-    polygons <- check_spatial_file(polygons, source = file_path)
+    geometry <- check_spatial_file(geometry, source = file_path)
   }
 
-  return(polygons)
+  return(geometry)
 }
 
 
@@ -332,7 +337,7 @@ read_spatial_file <- function(file_path, validate = TRUE) {
 #' checks. Designed to be used both after reading files and when the user supplies an sf object
 #' directly.
 #'
-#' @param polygons An sf object to validate and clean.
+#' @param geometry An sf object to validate and clean.
 #' @param source Optional character string describing the source (e.g., file path) for messaging.
 #'
 #' @return A cleaned and validated sf object with geometry in WGS84 (EPSG:4326).
@@ -341,51 +346,51 @@ read_spatial_file <- function(file_path, validate = TRUE) {
 #' @examples
 #' \dontrun{
 #'   # Validate and clean an sf object
-#'   cleaned_polygons <- check_spatial_file(my_polygons)
+#'   cleaned_geometry <- check_spatial_file(my_geometry)
 #'   
 #'   # With source information for better error messages
-#'   cleaned_polygons <- check_spatial_file(my_polygons, source = "my_data.gpkg")
+#'   cleaned_geometry <- check_spatial_file(my_geometry, source = "my_data.gpkg")
 #' }
-check_spatial_file <- function(polygons, source = NULL, verbose = 1) {
+check_spatial_file <- function(geometry, source = NULL, verbose = 1) {
   # Provide a short source label for messages
   src <- if (!is.null(source)) paste0(source, ": ") else ""
 
   # Check the original CRS
-  original_crs <- st_crs(polygons)
-  original_epsg <- st_crs(polygons)$epsg
+  original_crs <- st_crs(geometry)
+  original_epsg <- st_crs(geometry)$epsg
 
   # If CRS is NA, assume it's WGS 84 (EPSG:4326)
   if (is.na(original_crs)) {
     warning(src, "CRS is missing; setting CRS to WGS 84 (EPSG:4326).")
-    st_crs(polygons) <- 4326
+    st_crs(geometry) <- 4326
   }
 
   # Transform to WGS84 if necessary
-  if (st_crs(polygons) != 4326) {
+  if (st_crs(geometry) != 4326) {
     if (verbose >= 2) {
       message(src, "Transforming CRS to WGS84 (EPSG:4326).")
     }
-    polygons <- suppressMessages(st_transform(polygons, crs = 4326, quiet = TRUE))
+    geometry <- suppressMessages(st_transform(geometry, crs = 4326, quiet = TRUE))
   }
 
   # Rename geometry column 'geom' to 'geometry' if needed.
-  if ("geom" %in% names(polygons)) {
+  if ("geom" %in% names(geometry)) {
     if (verbose >= 2) {
       message(src, "Renaming geometry column 'geom' to 'geometry'.")
     }
-    names(polygons)[names(polygons) == "geom"] <- "geometry"
-    st_geometry(polygons) <- "geometry"
+    names(geometry)[names(geometry) == "geom"] <- "geometry"
+    st_geometry(geometry) <- "geometry"
   }
 
   # Remove empty geometries
-  empty_idx <- which(st_is_empty(polygons))
+  empty_idx <- which(st_is_empty(geometry))
   if (length(empty_idx) > 0) {
-    warning(src, length(empty_idx), "/", nrow(polygons), " rows have empty geometries and will be removed: ", paste(empty_idx, collapse = ", "))
-    polygons <- polygons[-empty_idx, ]
+    warning(src, length(empty_idx), "/", nrow(geometry), " rows have empty geometries and will be removed: ", paste(empty_idx, collapse = ", "))
+    geometry <- geometry[-empty_idx, ]
   }
 
   # Geometry type checks
-  geom_types <- st_geometry_type(polygons)
+  geom_types <- st_geometry_type(geometry)
   unique_geom_types <- unique(geom_types)
   has_points <- any(grepl("POINT", unique_geom_types))
   has_polygons <- any(grepl("POLYGON", unique_geom_types))
@@ -409,7 +414,7 @@ check_spatial_file <- function(polygons, source = NULL, verbose = 1) {
     polygon_indices <- grepl("POLYGON", geom_types)
     n_polygons <- sum(polygon_indices)
 
-    invalid_polygon_idx <- polygon_indices & !st_is_valid(polygons)
+    invalid_polygon_idx <- polygon_indices & !st_is_valid(geometry)
     n_invalid_polygons <- sum(invalid_polygon_idx)
     if (n_invalid_polygons > 0) {
       warning(src, n_invalid_polygons, "/", n_polygons, " polygon rows have invalid geometries and will be fixed.")
@@ -418,7 +423,7 @@ check_spatial_file <- function(polygons, source = NULL, verbose = 1) {
     if (verbose >= 2) {
       message(src, "Applying st_make_valid() to ", n_polygons, " polygon geometries.")
     }
-    temp_polygons <- polygons
+    temp_polygons <- geometry
     temp_polygons[polygon_indices, ] <- st_make_valid(temp_polygons[polygon_indices, ])
 
     post_valid_empty_idx <- which(polygon_indices & st_is_empty(temp_polygons))
@@ -427,27 +432,27 @@ check_spatial_file <- function(polygons, source = NULL, verbose = 1) {
       temp_polygons <- temp_polygons[-post_valid_empty_idx, ]
     }
 
-    polygons <- temp_polygons
-    polygons <- st_wrap_dateline(polygons, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
+    geometry <- temp_polygons
+    geometry <- st_wrap_dateline(geometry, options = c("WRAPDATELINE=YES", "DATELINEOFFSET=180"))
   }
 
   # Final checks
-  final_empty_idx <- which(st_is_empty(polygons))
+  final_empty_idx <- which(st_is_empty(geometry))
   if (length(final_empty_idx) > 0) {
-    warning(src, length(final_empty_idx), "/", nrow(polygons), " rows have empty geometries and will be removed: ", paste(final_empty_idx, collapse = ", "))
-    polygons <- polygons[-final_empty_idx, ]
+    warning(src, length(final_empty_idx), "/", nrow(geometry), " rows have empty geometries and will be removed: ", paste(final_empty_idx, collapse = ", "))
+    geometry <- geometry[-final_empty_idx, ]
   }
 
-  final_invalid_idx <- which(!st_is_valid(polygons))
+  final_invalid_idx <- which(!st_is_valid(geometry))
   if (length(final_invalid_idx) > 0) {
-    warning(src, length(final_invalid_idx), "/", nrow(polygons), " rows still have invalid geometries: ", paste(final_invalid_idx, collapse = ", "))
+    warning(src, length(final_invalid_idx), "/", nrow(geometry), " rows still have invalid geometries: ", paste(final_invalid_idx, collapse = ", "))
   }
 
   if (verbose >= 2) {
-    message(src, "Final result: ", nrow(polygons), " valid geometries loaded.")
+    message(src, "Final result: ", nrow(geometry), " valid geometries loaded.")
   }
 
-  return(polygons)
+  return(geometry)
 }
 
 #' Buffer Spatial Extent Based on Raster Resolution

@@ -18,12 +18,12 @@ NULL
 #'                  rasters, OR a SpatRaster object containing the environmental data. 
 #'                  Layer names must be in date format (e.g., "YYYY-MM-DD").
 #'
-#' @param polygons Either a character string specifying the file path to a spatial polygon file
-#'                 (e.g., shapefile, geopackage), OR an sf/SpatVector object containing the 
-#'                 polygons for spatial aggregation.
+#' @param geometry Either a character string specifying the file path to a spatial geometry file
+#'                 (e.g., shapefile, geopackage), OR an sf/SpatVector object containing
+#'                 polygons or points for spatial aggregation.
 #'
 #' @param geom_id_col A character string representing the column name of the unique ID
-#'                     in the polygon dataset (e.g., "GEOID"). If NULL, a row_index
+#'                     in the geometry dataset (e.g., "GEOID"). If NULL, a row_index
 #'                     column will be created and used as the geometry ID, 
 #'                     and all other columns are kept in the output.
 #'
@@ -122,7 +122,7 @@ NULL
 #'         Results are also saved directly to the specified output directory in parquet format when save_path is provided.
 #' @export
 r2e2 <- function(env_rast,
-                 polygons,
+                 geometry,
                  geom_id_col = NULL,
                  trans_type,
                  degree = NULL,
@@ -253,17 +253,19 @@ r2e2 <- function(env_rast,
   ## ---- 1.2 Import Polygons ---------------------------------------------------------
   
   # Handle polygons - either load from path or validate existing object
-  if (is.character(polygons)) {
-    polygons <- read_spatial_file(polygons)
+  if (is.character(geometry)) {
+    polygons <- read_spatial_file(geometry)
     if (verbose >= 1) {
       message("✓ Polygons loaded: ", nrow(polygons), " features")
     }
-  } else if (!inherits(polygons, c("sf", "SpatVector"))) {
-    stop("polygons must be either a character path to a spatial file or an sf/SpatVector object")
+  } else if (!inherits(geometry, c("sf", "SpatVector"))) {
+    stop("geometry must be either a character path to a spatial file or an sf/SpatVector object")
   } else {
     # If a SpatVector is provided, convert to sf first
-    if (inherits(polygons, "SpatVector")) {
-      polygons <- sf::st_as_sf(polygons)
+    if (inherits(geometry, "SpatVector")) {
+      polygons <- sf::st_as_sf(geometry)
+    } else {
+      polygons <- geometry
     }
     # Validate and clean the provided sf object
     polygons <- check_spatial_file(polygons, verbose = verbose)
@@ -481,7 +483,7 @@ r2e2 <- function(env_rast,
   
   spatial_agg <- trans_spatial_agg(env_rast_list = env_rast_list, 
                                    sec_weight_rast_list = sec_weight_rast_list, 
-                                   polygons = polygons,
+                                   polygons = geometry,
                                    crop_extent = crop_extent, 
                                    trans_fun = trans_fun, 
                                    trans_type = trans_type,
