@@ -7,3 +7,4 @@
 ^\.bak$
 ^\.bak[0-9]$
 ^plots$
+^LICENSE\.md$

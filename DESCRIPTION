@@ -1,11 +1,10 @@
 Package: heat
-Title: What the Package Does (One Line, Title Case)
+Title: Compute environmental exposures from raster data
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person("Jonas", "Wallstein", email = "jwallstein@stanford.edu", role = c("aut", "cre"), person("Brandon", "de la Cuesta", email = "brandon.delacuesta@stanford.edu", role = c("aut", "cre"), person("Marshall", "Burke", email =  "mburke@stanford.edu", role = c("aut"))
+Description: The 'heat' package (Harmonized Envrionmental Exposure Aggregation Tools) aggregates environmental raster data to environmental exposures for any 'sf' dataframe of administrative boundaries or point locations. 'heat' supports nonlinear transformations (polynomials, splines, bins and custom functions) and aggregating the exposures to the desired temporal resolution. The package can process large datasets with decades of high-resolution raster data efficiently by automatically splitting the data into batches.
+License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
