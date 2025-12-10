@@ -7,7 +7,7 @@ Authors@R:
     person("Brandon", "de la Cuesta", email = "brandon.delacuesta@stanford.edu", role = c("aut")),
     person("Marshall", "Burke", email = "mburke@stanford.edu", role = c("aut"))
     )
-Description: The R package `heat` - Harmonized Envrionmental Exposure Aggregation Tools - provides a comprehensive set of tools to compute environmental exposures for administrative boundaries or point locations. Its main aggregation function, `r2e2`, supports various nonlinear transformations (e.g., polynomial, splines, binning), temporal aggregations (e.g., daily, monthly, yearly), and scales efficiently to large raster datasets spanning multiple decades.
+Description: The R package heat - Harmonized Environmental Exposure Aggregation Tools - provides a comprehensive set of tools to compute environmental exposures for administrative boundaries or point locations. Its main aggregation function, `r2e2`, supports various nonlinear transformations (e.g., polynomial, splines, binning), temporal aggregations (e.g., daily, monthly, yearly), and scales efficiently to large raster datasets spanning multiple decades.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
