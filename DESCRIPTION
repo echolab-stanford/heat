@@ -1,6 +1,6 @@
 Package: heat
 Title: Compute environmental exposures from raster data
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
     c(
     person("Jonas", "Wallstein", email = "jwallstein@stanford.edu", role = c("aut", "cre")),
