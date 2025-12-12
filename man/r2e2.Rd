@@ -29,8 +29,8 @@ r2e2(
   overwrite_batch_output = FALSE,
   compression = "zstd",
   validation = TRUE,
-  validation_var = "degree_1",
-  validation_var_name = "Temperature (C)",
+  validation_var = NULL,
+  validation_var_name = NULL,
   verbose = 1
 )
 }
@@ -127,10 +127,10 @@ files (default is 'zstd').}
 for data quality control (default is TRUE).}
 
 \item{validation_var}{The name of the transformation variable to be used in validation plots.
-(default is 'degree_1' but if not found, it will use the first detected transformation variable)}
+If NULL (default), automatically selects the first detected transformation variable.}
 
 \item{validation_var_name}{A character string describing the transformation variable
-for plot labels (default is "Temperature (C)")}
+for plot labels. If NULL (default), uses the detected variable name.}
 
 \item{verbose}{Integer controlling message verbosity: 0 = silent, 1 = concise progress messages,
 2 = detailed messages (default: 1). This applies to both the r2e2 pipeline and validation checks.}

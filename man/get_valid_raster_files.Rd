@@ -4,13 +4,15 @@
 \alias{get_valid_raster_files}
 \title{Get Valid Raster Files}
 \usage{
-get_valid_raster_files(path, pattern = "\\\\.tif$|\\\\.nc$")
+get_valid_raster_files(path, pattern = "\\\\.tif$|\\\\.nc$", verbose = 1)
 }
 \arguments{
 \item{path}{A character string specifying the path to the folder containing raster files.}
 
 \item{pattern}{A character string specifying the file pattern to match (default is "\\.tif$|\\.nc$"
 for GeoTIFF and NetCDF files).}
+
+\item{verbose}{Integer verbosity level (0 = silent, 1 = concise, 2 = detailed). Default is 1.}
 }
 \value{
 A character vector containing paths to the valid raster files that can be read.

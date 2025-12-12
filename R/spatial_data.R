@@ -149,6 +149,7 @@ check_raster_layers <- function(raster, raster_name = "raster", verbose = 1) {
 #' @param path A character string specifying the path to the folder containing raster files.
 #' @param pattern A character string specifying the file pattern to match (default is "\\.tif$|\\.nc$" 
 #'   for GeoTIFF and NetCDF files).
+#' @param verbose Integer verbosity level (0 = silent, 1 = concise, 2 = detailed). Default is 1.
 #'
 #' @return A character vector containing paths to the valid raster files that can be read.
 #'
@@ -160,7 +161,7 @@ check_raster_layers <- function(raster, raster_name = "raster", verbose = 1) {
 #'   # Get only NetCDF files
 #'   nc_files <- get_valid_raster_files("path/to/rasters/", pattern = "\\.nc$")
 #' }
-get_valid_raster_files <- function(path, pattern = "\\.tif$|\\.nc$") {
+get_valid_raster_files <- function(path, pattern = "\\.tif$|\\.nc$", verbose = 1) {
   # Identify all raster files in the folder with full paths
   rast_files <- list.files(
     path = path,
@@ -189,7 +190,7 @@ get_valid_raster_files <- function(path, pattern = "\\.tif$|\\.nc$") {
   }
   
   unavailable_files <- setdiff(rast_files, available_files)
-  if (length(unavailable_files) > 0) {
+  if (length(unavailable_files) > 0 && verbose >= 2) {
     message("The following files could not be read. If the raster is located in Dropbox, make sure it is available offline before executing the script. Unavailable files: \n", paste(unavailable_files, collapse = ", "))
   }
   
@@ -220,7 +221,7 @@ get_valid_raster_files <- function(path, pattern = "\\.tif$|\\.nc$") {
 filter_read_rast <- function(path, year_range = NULL, verbose = 1) {
   
   # Identify all available rasters in the folder
-  rast_files <- get_valid_raster_files(path, pattern = "\\.tif$|\\.nc$") 
+  rast_files <- get_valid_raster_files(path, pattern = "\\.tif$|\\.nc$", verbose = verbose) 
   
   # Print the path from which files are being loaded (only if verbose >= 2)
   if (verbose >= 2) {

@@ -319,3 +319,47 @@ reshape_to_long <- function(wide_dt,
   
   return(long_dt)
 }
+
+
+#' Get Transformation Variable Columns
+#'
+#' @description
+#'   Identifies transformation variable columns in a data frame. Throws error if multiple types found.
+#'   Warns if none found.
+#'
+#' @param df A data frame to search for transformation variable columns
+#'
+#' @return A character vector of transformation variable column names
+#'
+#' @examples
+#' \dontrun{
+#'   trans_cols <- get_trans_var_cols(my_data)
+#' }
+get_trans_var_cols <- function(df) {
+  col_names <- names(df)
+  
+  # Find each transformation type
+  patterns <- list(
+    polynomial = "^degree_\\d+$",
+    spline = "^term_\\d+$", 
+    bin = "^bin_.*_to_.*$",
+    none = "^value$"
+  )
+  
+  found_types <- sapply(patterns, function(p) any(grepl(p, col_names)))
+  
+  # Error if multiple types found
+  if (sum(found_types) > 1) {
+    stop("Multiple transformation types found: ", paste(names(found_types)[found_types], collapse = ", "))
+  }
+  
+  # Warning if none found
+  if (sum(found_types) == 0) {
+    warning("No transformation variable columns found in dataset")
+    return(character(0))
+  }
+  
+  # Return matching columns
+  pattern <- patterns[[which(found_types)]]
+  return(col_names[grepl(pattern, col_names)])
+}

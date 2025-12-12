@@ -398,8 +398,8 @@ validate_r2e2 <- function(results = NULL,
                           df_long = NULL,
                           geometry = NULL,
                           area_weights = NULL,
-                          validation_var,
-                          validation_var_name,
+                          validation_var = NULL,
+                          validation_var_name = NULL,
                           save_path = NULL,
                           spatial_averages = TRUE,
                           time_series = TRUE,
@@ -542,6 +542,27 @@ validate_r2e2 <- function(results = NULL,
   
   # Ensure geometry is sf object
   target_geometry <- sf::st_as_sf(geometry)
+  
+  # Auto-detect validation_var if not provided
+  if (is.null(validation_var)) {
+    trans_var_cols <- get_trans_var_cols(df_long)
+    if (length(trans_var_cols) > 0) {
+      validation_var <- trans_var_cols[1]
+      if (verbose >= 1) {
+        message("   Auto-detected transformation variable for validation: ", validation_var)
+      }
+    } else {
+      stop("No transformation variable found in data. Cannot run validation.")
+    }
+  }
+  
+  # Auto-generate validation_var_name if not provided
+  if (is.null(validation_var_name)) {
+    validation_var_name <- validation_var
+    if (verbose >= 2) {
+      message("Using variable name for plot labels: ", validation_var_name)
+    }
+  }
   
   # Initialize results list
   results <- list()
