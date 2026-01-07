@@ -7,9 +7,10 @@ The `heat` R package provides a comprehensive set of tools to compute environmen
 ## Installation
 
 ``` r
-# Install devtools if needed
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
+
+# Install remotes if needed
+if (!requireNamespace("remotes", quietly = TRUE)) {
+  install.packages("remotes")
 }
 
 # Install heat
@@ -86,7 +87,6 @@ For a great explanation of these operations and why their order matters, please 
 
 -  Batch processing: Enables fast processing across multiple decades on regular laptops and high-performance computing clusters
 -  Smart restart: Automatically resumes from last successful batch when re-running after interruption (see performance tips below)
--  Support for temporal resolutions from sub-hourly to yearly in the input environmental raster 
 -  Built-in plots to validate the quality of the output and visualize the exposure distributions
 -  Integrated support for time-varying secondary weights (e.g., yearly population counts)
 -  Raster interpolations: Mean daily temperature, or sinusoidal hourly temperature, interpolated from daily min and max temperature
