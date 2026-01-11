@@ -327,8 +327,8 @@ test_that("interpol_min_max works with mean_interpol", {
   
   # Run interpol_min_max with mean_interpol
   result <- interpol_min_max(
-    min_rast_path = paths$tmin_dir,
-    max_rast_path = paths$tmax_dir,
+    min_rast = paths$tmin_dir,
+    max_rast = paths$tmax_dir,
     geometry = geometry,
     start_date = "2000-01-01",
     end_date = "2000-01-03",
@@ -374,13 +374,13 @@ test_that("interpol_min_max works with sinusoidal_interpol", {
   
   # Run interpol_min_max with sinusoidal_interpol
   result <- interpol_min_max(
-    min_rast_path = paths$tmin_dir,
-    max_rast_path = paths$tmax_dir,
+    min_rast = paths$tmin_dir,
+    max_rast = paths$tmax_dir,
     geometry = geometry,
     start_date = "2000-01-01",
     end_date = "2000-01-02",
     interpol_fun = sinusoidal_interpol,
-    daily_agg_fun = "none"  # Keep hourly output
+    daily_agg_fun = "none"  # No aggregation for hourly output
   )
   
   # Check that result is a SpatRaster
@@ -421,8 +421,8 @@ test_that("interpol_min_max aggregates hourly to daily correctly", {
   
   # Run interpol_min_max with daily aggregation
   result <- interpol_min_max(
-    min_rast_path = paths$tmin_dir,
-    max_rast_path = paths$tmax_dir,
+    min_rast = paths$tmin_dir,
+    max_rast = paths$tmax_dir,
     geometry = geometry,
     start_date = "2000-01-01",
     end_date = "2000-01-02",
@@ -471,8 +471,8 @@ test_that("interpol_min_max saves output when save_path is provided", {
   
   # Run interpol_min_max with save_path
   result <- interpol_min_max(
-    min_rast_path = paths$tmin_dir,
-    max_rast_path = paths$tmax_dir,
+    min_rast = paths$tmin_dir,
+    max_rast = paths$tmax_dir,
     geometry = geometry,
     start_date = "2000-01-01",
     end_date = "2000-01-02",

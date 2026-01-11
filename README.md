@@ -232,10 +232,12 @@ For raster datasets with only daily minimum and maximum values (e.g., `tmin` and
 ``` r
 # Interpolate hourly temperature from tmin and tmax
 hourly_temp <- interpol_min_max(
-  min_rast_path = "path/to/tmin/",
-  max_rast_path = "path/to/tmax/",
+  min_rast = "path/to/tmin/",
+  max_rast = "path/to/tmax/",
   geometry = regions,
-  interpol_fun = sinusoidal_interpol,   # Use sinusoidal interpolation
+  start_date = "2020-01-01",
+  end_date = "2020-12-31",
+  interpol_fun = sinusoidal_interpol   # Use sinusoidal interpolation
 )
 
 # Get binned distribution within a day from the hourly data
