@@ -545,6 +545,9 @@ validate_r2e2 <- function(results = NULL,
   
   # Auto-detect validation_var if not provided
   if (is.null(validation_var)) {
+    if (verbose >= 2) {
+      message("Auto-detecting transformation variable...")
+    }
     trans_var_cols <- get_trans_var_cols(df_long)
     if (length(trans_var_cols) > 0) {
       validation_var <- trans_var_cols[1]
@@ -552,8 +555,19 @@ validate_r2e2 <- function(results = NULL,
         message("   Auto-detected transformation variable for validation: ", validation_var)
       }
     } else {
-      stop("No transformation variable found in data. Cannot run validation.")
+      stop("No transformation variable found in data. Cannot run validation.\n",
+           "Available columns: ", paste(names(df_long), collapse = ", "))
     }
+  } else {
+    if (verbose >= 2) {
+      message("Using provided validation_var: ", validation_var)
+    }
+  }
+  
+  # Verify validation_var exists in data
+  if (!(validation_var %in% names(df_long))) {
+    stop("validation_var '", validation_var, "' not found in data.\n",
+         "Available columns: ", paste(names(df_long), collapse = ", "))
   }
   
   # Auto-generate validation_var_name if not provided
