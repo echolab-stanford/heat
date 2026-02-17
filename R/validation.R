@@ -72,8 +72,11 @@ process_data <- function(dataframe, input_temporal_resolution, output_temporal_r
 plot_spatial_averages <- function(data, target_geometry, title, fill_variable, fill_label, 
                                   x_label = "Longitude", y_label = "Latitude") {
   
+  # Get the geometry column name
+  geom_col <- attr(target_geometry, "sf_column")
+  
   merged_data <- data |>
-    dplyr::left_join(target_geometry |> dplyr::select(geom_id, geometry), by = "geom_id") |>
+    dplyr::left_join(target_geometry |> dplyr::select(geom_id, !!geom_col), by = "geom_id") |>
     sf::st_as_sf()
   
   is_points <- any(grepl("POINT", sf::st_geometry_type(merged_data)))
@@ -316,7 +319,7 @@ transform_binned_output <- function(data, temporal_resolution) {
   bin_vars <- names(data)[startsWith(names(data), "bin_")]
   
   data <- data |>
-    dplyr::mutate(sum_of_bins = rowSums(dplyr::select(., dplyr::all_of(bin_vars)), na.rm = TRUE))
+    dplyr::mutate(sum_of_bins = rowSums(dplyr::across(dplyr::all_of(bin_vars)), na.rm = TRUE))
   
   data <- data |> 
     dplyr::mutate(expected_sum = if (temporal_resolution == "daily") 1 else lubridate::days_in_month(lubridate::make_date(year, month, 1)))
