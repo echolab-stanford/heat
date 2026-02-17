@@ -18,6 +18,7 @@ trans_spatial_agg(
   save_path,
   sec_weights = TRUE,
   max_cells = 3e+07,
+  daily_agg_fun = "none",
   save_batch_output = TRUE,
   overwrite_batch_output = FALSE,
   verbose = 1

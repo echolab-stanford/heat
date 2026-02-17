@@ -5,29 +5,34 @@
 \title{Interpolate Daily Minimum and Maximum Temperatures to Obtain Hourly Values}
 \usage{
 interpol_min_max(
-  min_rast_path,
-  max_rast_path,
+  min_rast,
+  max_rast,
   geometry,
-  start_date,
-  end_date,
+  start_date = NULL,
+  end_date = NULL,
   interpol_fun,
   interpol_args = NULL,
   daily_agg_fun = "none",
   save_path = NULL,
+  overwrite_batches = FALSE,
   max_cells = 3e+07,
   max_output_layers = 30000
 )
 }
 \arguments{
-\item{min_rast_path}{Path to the directory containing minimum temperature raster files.}
+\item{min_rast}{Either a SpatRaster object or a character string path to the directory
+containing minimum temperature raster files.}
 
-\item{max_rast_path}{Path to the directory containing maximum temperature raster files.}
+\item{max_rast}{Either a SpatRaster object or a character string path to the directory
+containing maximum temperature raster files.}
 
 \item{geometry}{An sf object that defines geographical boundaries, used for cropping the rasters.}
 
-\item{start_date}{Character string or Date object specifying the start date for interpolation (e.g., "2022-01-01").}
+\item{start_date}{Character string or Date object specifying the start date for interpolation (e.g., "2022-01-01").
+If NULL and rasters are provided as objects, will use the full date range of the rasters.}
 
-\item{end_date}{Character string or Date object specifying the end date for interpolation (e.g., "2022-01-07").}
+\item{end_date}{Character string or Date object specifying the end date for interpolation (e.g., "2022-01-07").
+If NULL and rasters are provided as objects, will use the full date range of the rasters.}
 
 \item{interpol_fun}{A function used for interpolating the temperatures. This function
 should accept minimum and maximum temperatures as inputs.}
@@ -41,6 +46,10 @@ when converting back to daily values. Defaults to "none".}
 the interpolated raster. If NULL (default), the raster is only returned
 without saving to disk. When provided, the output raster is saved as a
 GeoTIFF split up into batches.}
+
+\item{overwrite_batches}{Logical indicating whether to overwrite existing batch files.
+If FALSE (default), existing batches will be skipped and processing
+will resume from the next missing batch (smart restart).}
 
 \item{max_output_layers}{An integer defining the maximum number of output layers allowed;
 default is set to 30,000 to prevent exceeding raster writing limits.}
@@ -58,16 +67,26 @@ processing limitations.
 }
 \examples{
 \dontrun{
-  # Example using the interpol_min_max function:
+  # Example 1: Using file paths
   result <- interpol_min_max(
-    min_rast_path = "path/to/tmin",
-    max_rast_path = "path/to/tmax",
+    min_rast = "path/to/tmin",
+    max_rast = "path/to/tmax",
     geometry = my_regions,
     start_date = "2022-01-01",
     end_date = "2022-01-07",
     interpol_fun = sinusoidal_interpol,
     interpol_args = list(),
     daily_agg_fun = "mean"
+  )
+  
+  # Example 2: Using SpatRaster objects
+  tmin_rast <- rast("path/to/tmin.tif")
+  tmax_rast <- rast("path/to/tmax.tif")
+  result <- interpol_min_max(
+    min_rast = tmin_rast,
+    max_rast = tmax_rast,
+    geometry = my_regions,
+    interpol_fun = sinusoidal_interpol
   )
 }
 
