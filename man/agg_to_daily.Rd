@@ -4,7 +4,7 @@
 \alias{agg_to_daily}
 \title{Aggregate Subdaily Rasters to Daily Values}
 \usage{
-agg_to_daily(subdaily_raster, fun = "none")
+agg_to_daily(subdaily_raster, fun = "none", verbose = 1)
 }
 \arguments{
 \item{subdaily_raster}{A \code{SpatRaster} object containing subdaily data. Each layer should correspond

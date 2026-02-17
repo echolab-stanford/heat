@@ -350,13 +350,6 @@ r2e2 <- function(env_rast,
   
   # Clean up large objects no longer needed
   gc(verbose = FALSE)
-  
-  
-  ## ---- 1.3a Aggregate subdaily data to daily if needed ---------------------------------------------------------
-  
-  if (daily_agg_fun != "none") {
-    env_rast <- agg_to_daily(env_rast, fun = daily_agg_fun)
-  }
 
 
   ## ---- 1.4 Handle start and end dates ---------------------------------------------------------
@@ -511,7 +504,8 @@ r2e2 <- function(env_rast,
                                    weighting_periods = weighting_periods, 
                                    save_path = save_path, 
                                    sec_weights = sec_weights,
-                                   max_cells = max_cells, 
+                                   max_cells = max_cells,
+                                   daily_agg_fun = daily_agg_fun,
                                    save_batch_output =  save_batch_output,
                                    overwrite_batch_output = overwrite_batch_output,
                                    verbose = verbose)
