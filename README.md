@@ -1,6 +1,7 @@
 # `heat` : Harmonized Environmental Exposure Aggregation Tools
 
 [![](https://zenodo.org/badge/1113902927.svg)](https://doi.org/10.5281/zenodo.17882617)
+[![R Tests](https://github.com/echolab-stanford/heat/actions/workflows/r-tests.yml/badge.svg)](https://github.com/echolab-stanford/heat/actions/workflows/r-tests.yml)
 
 The `heat` R package provides a comprehensive set of tools to compute environmental exposures for administrative boundaries or point locations. Its main aggregation function, `r2e2`, supports various nonlinear transformations (e.g., polynomial, splines, binning), temporal aggregations (e.g., daily, monthly, yearly), and scales efficiently to large raster datasets spanning multiple decades.
 
