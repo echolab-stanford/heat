@@ -250,8 +250,6 @@ exposures <- r2e2(
   out_temp_res = "daily"                 # Aggregate back to daily
 )
 ```
-
-
 ## Performance Tips
 
 -   Use `max_cells` to control memory usage. Default are 30 million (`3e7`) cells processed at once. Lower values will decrease memory usage.
@@ -259,6 +257,132 @@ exposures <- r2e2(
 -   For points, the package automatically uses an optimized extraction method
 -   Enable smart restart, which automatically resumes from the last successful batch when re-running after an interruption. This is enabled by default when a `save_path` is provided, `save_batch_output = TRUE`, and `overwrite_batch_output = FALSE`.
 -   If the polygons are far apart, e.g. spanning multiple countries or continents, the soon to be released `r2e2_country()` function will accelerate processing by splitting the raster by country.
+
+
+## Shocks
+For wide datasets produced by the r2e2 function, and given a dataframe with geometry IDs and dates (e.g., the starting date of a program), the `heat` package provides functions to estimate measures of climate shocks or deviations with respect to a historical baseline. The main of this functions, shocks_wrapper, receives inputs to create a sequence of dates foe which the mean and standard deviation are estimated for a given climate variable, and then compared to a baseline. The user can specify the size of the window, the number of time-steps into which it is divided, the nature of the historical window (whether dynamic or fixed), and many other configurations by defining the following parameters: 
+
+
+-   **`window`**: the size in time units (i.e., days when the resolution is daily, months when it is monthly) of the dates window
+-   **`start`**: the offset in days indicating the starting date of the window with respect to the date associated with a geometry.
+-   **`hist_lags`**: whenever the historical baseline is dynamic, the number of past years to include to create the baseline (e.g., hist_lags = 10 means that the historical baseline will be created with the climate measures for the 10 years before theyear of the geometry date). 
+-   **`align`**: whether the date sequence is left- or right-aligned with respect to the geometry date. Left-alignment means that the sequence contains dates AFTER the polygon date. Right-alingment means that the sequence includes dates BEFORE the polygon date
+-   **`time_step_size`**: the number of days (months) in each temporal bin that divides the date sequence (e.g., `time_step_size` = 30 divides a daily date sequence of length `window` into groups or bins of 30 days).
+-   **`disjoint`**: whether the groups into which the date sequence is divide shall be considered disjoint or overlapping (default option). Disjoint groups never overlap. For example, for a date sequence of 30 days with 3 groups of 10 days (`time_step_size` = 10), disjoint groups have the form: **group 1**: day 1 - day 10 | **group 2**: day 11 - day 20 | **group 3**: day 21 - day 30. On the other hand, overlapping groups have the form: **group 1**: day 1- day 10 | **group 2**: day 1 - day 20 | **group 3**: day 1- day 30. 
+-   **`window_spec`**: whether the historical window is dynamic, fixed or both. When it is dynamic, the starting and ending dates of the historical window for a given geometry depend on the specific date associated to that geometry and the number of historic lags. The window sequence corresponding to a given geometry date will be replicated for a number of past years (as specified by the `hist_lags` argument) to form the dynamic historical window. Therefore, the period to build the dynamic historical window will depend on the year of each geometry date and will vary across geometries. On the contrary, when the historical window is fixed, the historical baseline is created by replicating the window sequence of a given geometry date within a fixed range of time, which is defined by the `start_date` and `end_date` parameters. All historic windows are therefore created within the same range, regardless of the year of the geometry date. 
+-   **`start_date`**: whenever the historical window is fixed, the initial date of the window of time used to create the historical baseline. 
+-   **`end_date`**: whenever the historical window is fixed, the end date of the window of time used to create the historical baseline. 
+-   **`int_threshold`**: some date sequence might fall outside of the date range of the dataframe produced by the `r2e2` function. This parameter controls the proportion of dates of a date sequence and its corresponding historical baseline that must be present in the dataframe to be considered valid for analysis. 
+
+### Notes on performance: 
+The `shocks_warpper` function might deal with massive objects (e.g., parquet files containing daily climate measures spanning a long period). Therefore, the function includes several parameters to balance the need for computational speed and the memory limits. These parameters are:
+
+
+-   **`conditions_list`**: A named list of conditions to query the parquet file with climate measures. The named conditions  should be: 
+
+      1. data_path: A character string with the path to the parquet file.
+      2. geom_id: A vector of unique geometry IDs indicating the geometries for which the shocks should be estimated.
+      3. trans_type: A character vector indicating the type of transformations to be included (e.g., c("polynomial")).
+      4. trans_var: A character vector indicating the degrees of the transformation to include (e.g., c("degree_2", "degree_3")).
+      5. product_temp_res: A character indicating the temporal resolution of the product. Must be one of the following: "daily" or "monthly" ("yearly" not supported yet). 
+
+-   **`date_tolerance_days`**: some geometries can be grouped based on the proximity of their dates. Doing so helps reduce the number of date columns that need to be loaded per geometry group and, as such, the memory usage of the function. Setting a lower number means that groups are smaller in size, but might increases running times as more groups are produced. 
+-   **`max_group_size`**: this parameters defines the maximum number of geometries that are allowd to be in a group (i.e., after grouping geometries by date proximity). This prevents the creation of extremely large groups, which reduces memory usage, but might increase running times by creating more groups to process.
+-   **`prop_cores`**: in some cases, parallelization might be desired. The function performs parallelization by using the future callr backend, using a proportion `prop_cores` of available workers. Parallelization might reduce running times, but using multiple cores might increase memory usage substantially. Keep `prop_cores` near 0 (or 0 if you want sequential processing) if shocks are being estimated for long date sequences and using long historic sequences (e.g., 20 years of historic lags). 
+
+### Example: estimating climate shocks with different historical window schemes
+``` r
+# Define conditions list
+conditions = list(
+  data_path = file.path(...) # Path to wide-format parquet file produced by r2_e2,
+  geom_id = unique(poly_date_df$poly_id)  # Vector of geometry IDs (in the example, all polygons are used)
+  trans_type = c("polynomial"),           # Transformation type of interest
+  trans_var = c("degree_1", "degree_2")   # Transformation degrees of interest
+)
+
+# Estimate shocks with a dynamic window
+climate_shocks_dynamic <- shocks_wrapper(
+  pol_date_pairs = poly_date_df,        # Dataframe with a geometry id column and a date column
+  conditions_list = conditions,         # A list with condtions to filter the parquet file with climate measure
+  geom_id_col_parquet = "geom_id",      # The name of the column in the parquet file that contains the geometry ids 
+  geom_id_col_df = "poly_id",           # The name of the column in the geometry-dates dataframe with the geometry ids
+  date_id_col_df = "int_date",          # The name of the column in the geometry-dates dataframe with the dates
+  window = 10,                          # Create a window of 10 days (given a daily resolution, as specified in the conditions list)
+  start = 0,                            # No offset with respect to the geometry date
+  hist_lags = 10,                       # Use 10 past years to build the dynamic baseline
+  align = "right",                      # The date sequence includes dates previous to the geometry date
+  time_step_size = 5,                   # The date sequence is divided into N groups, each of 5 five days
+  window_spec = "dynamic",              # Create a dynamic baseline
+  start_date = NULL,                    # Not required if the window is dynamic
+  stop_date = NULL,                             
+  disjoint= FALSE,                      # Use overlapping groups
+  int_threshold = 0.8,                  # Intersection threshold
+  prop_cores = 0.2,                     # Use 20% of avalaible workers
+  date_tolerance_days = 10,             # Group polygons for which the date is at most 10 days apart
+  max_group_size = 10,                  # Polygon groups should have at most 10 polygons
+  query = "temperature_shocks",           # Name to be assigned to the final output
+  output_path =  file.path("..."),      # Path were the final output should be saved
+  error_log_path = file.path("...")     # Output were the error logs will be saved
+)
+
+# Estimate shocks with a fixed window
+climate_shocks_dynamic <- shocks_wrapper(
+  pol_date_pairs = poly_date_df,               
+  conditions_list = conditions,                
+  geom_id_col_parquet = "geom_id",              
+  geom_id_col_df = "poly_id",                  
+  date_id_col_df = "int_date",                 
+  window = 10,                                 
+  start = 0,                                   
+  hist_lags = 0,                               # Set to zero for fixed windows
+  align = "right",                             
+  time_step_size = 5,                          
+  window_spec = "fixed",                       # Create a fixed baseline
+  start_date = "1980-01-01",                   # Range for the fixed window begins on this date
+  stop_date = "1990-01-01",                    # Range for the fixed window ends on this date         
+  disjoint= FALSE,                             
+  int_threshold = 0.8,                         
+  prop_cores = 0.2,                            
+  date_tolerance_days = 10,                    
+  max_group_size = 10,                         
+  query = "temperature_shocks",                  
+  output_path =  file.path("..."),             
+  error_log_path = file.path("...")            
+)
+
+# Estimate shocks with both window schemes
+climate_shocks_dynamic <- shocks_wrapper(
+  pol_date_pairs = poly_date_df,               
+  conditions_list = conditions,                
+  geom_id_col_parquet = "geom_id",              
+  geom_id_col_df = "poly_id",                  
+  date_id_col_df = "int_date",                 
+  window = 10,                                 
+  start = 0,                                   
+  hist_lags = 10,                              # Use 10 past years to build the dynamic baseline
+  align = "right",                             
+  time_step_size = 5,                          
+  window_spec = "both",                        # Create a dynamic and a fixed baseline
+  start_date = "1980-01-01",                   # Initial date for the fixed baseline
+  stop_date = "1990-01-01",                    # End date for the fixed baseline         
+  disjoint= FALSE,                             
+  int_threshold = 0.8,                         
+  prop_cores = 0.2,                            
+  date_tolerance_days = 10,                    
+  max_group_size = 10,                         
+  query = "temperature_shocks",                  
+  output_path =  file.path("..."),             
+  error_log_path = file.path("...")            
+)
+
+```
+The `shocks_wrapper` function will create a parquet file with its results, which will be stored in the folder specified in the `output_path` argument. Similarly, if any errors are encountered, they will be stored as `.Rds` objects (lists) in the `error_log_path`. The function currently keeps track of the following errors: 1. date sequences that fall outside of the date range in dataframe produced by `r2e2`; 2. geometry dates outside of the dataframe´s range; 3. missing data in the dataframe produced by the `r2e2` function (e.g., NAs). The function will return a list with the path to the output and the errors list (if this exists).  Use `arrow::open_dataset(output_path)` to access the results. 
+
+## Validating the shocks measures
+The `heat` package also provides functions to quickly examine the output of the shocks procedure. The three core functions included are: 
+-   **`validate_global_summaries()`**: given the results datafarame as input, prints the summaries for each shocks measure, as well as NA counts.
+-   **`validate_measures_distributions()`**: given the results dataframe as input, plots the distribution for each measure. 
+
 
 **Installation Note for Positron Users**: If you encounter progress bar issues in the Positron IDE, install the development version of `progress`:
 
