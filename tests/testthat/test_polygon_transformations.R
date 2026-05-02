@@ -369,6 +369,144 @@ test_transformation(
   tolerance = tolerance
 )
 
+# ---- Test 6: Fallback to Area Weights for Zero Secondary Weights ----------------------------------------------------------
+
+if (should_print_banners()) {
+  cat("TEST 6: Fallback to Area Weights for Zero Secondary Weights\n")
+  cat(strrep("-", 80), "\n")
+}
+
+test_that("polygons with all-zero secondary weights fall back to area weights with a warning", {
+  library(terra)
+  library(sf)
+
+  ext_test <- terra::ext(0, 3, 0, 3)
+
+  # Environmental raster: 3x3 grid, 3 daily layers
+  env_layers <- lapply(seq_len(3), function(i) {
+    set.seed(100 + i)
+    env_vals <- runif(9, min = 1, max = 10)
+    r <- terra::rast(ncols = 3, nrows = 3, ext = ext_test,
+                     vals = env_vals, crs = "EPSG:4326")
+    names(r) <- as.character(as.Date("2000-01-01") + (i - 1))
+    r
+  })
+  env_rast <- terra::rast(env_layers)
+
+  # Secondary weight raster: all-zero for the region of poly_1, normal for poly_2
+  # Use the same 3x3 grid for simplicity
+  weight_vals <- c(0, 0, 5, 0, 0, 5, 0, 0, 5)  # left two columns zero, right column non-zero
+  sec_weight_rast <- terra::rast(ncols = 3, nrows = 3, ext = ext_test,
+                                  vals = weight_vals, crs = "EPSG:4326")
+  names(sec_weight_rast) <- "2000"
+
+  # poly_1 covers only the left column (weight = 0), poly_2 covers the right column (weight > 0)
+  poly1 <- sf::st_polygon(list(matrix(c(0,0, 1,0, 1,3, 0,3, 0,0), ncol=2, byrow=TRUE)))
+  poly2 <- sf::st_polygon(list(matrix(c(2,0, 3,0, 3,3, 2,3, 2,0), ncol=2, byrow=TRUE)))
+  polygons_test <- sf::st_sf(
+    geom_id = c("poly_1", "poly_2"),
+    geometry = sf::st_sfc(poly1, poly2, crs = "EPSG:4326")
+  )
+
+  # Resample sec_weight_rast to env_rast resolution (same here, so just use directly)
+  agg_weights <- terra::resample(sec_weight_rast, env_rast[[1]], method = "average")
+
+  spatial_agg_args <- list(fun = "weighted_mean", stack_apply = FALSE, default_weight = 0)
+
+  fallback_env <- new.env(parent = emptyenv())
+  fallback_env$ids <- character(0)
+
+  result <- heat:::trans_spatial_agg_polygons(
+    raster_subset = env_rast,
+    trans_fun = "none",
+    checked_trans_args = list(),
+    geometry = polygons_test,
+    agg_weights = agg_weights,
+    spatial_agg_args = spatial_agg_args,
+    geom_id_col = "geom_id",
+    verbose = 0,
+    fallback_ids_env = fallback_env
+  )
+
+  # poly_1 should have fallen back to area weights and have non-NA results
+  poly1_rows <- result[result$geom_id == "poly_1", ]
+  date_cols <- setdiff(names(poly1_rows), c("geom_id", "trans_var"))
+  poly1_values <- as.numeric(poly1_rows[1, ..date_cols])
+  expect_true(all(!is.na(poly1_values)),
+    info = "poly_1 (zero secondary weights) should have non-NA results via area weight fallback")
+
+  # poly_2 (non-zero weights) should also have non-NA results
+  poly2_rows <- result[result$geom_id == "poly_2", ]
+  poly2_values <- as.numeric(poly2_rows[1, ..date_cols])
+  expect_true(all(!is.na(poly2_values)),
+    info = "poly_2 (non-zero secondary weights) should have non-NA results")
+
+  # fallback_env should record poly_1 as a fallback ID
+  expect_true("poly_1" %in% fallback_env$ids,
+    info = "poly_1 should be recorded in fallback_ids_env")
+  expect_false("poly_2" %in% fallback_env$ids,
+    info = "poly_2 should NOT be recorded in fallback_ids_env")
+})
+
+test_that("trans_spatial_agg emits warning listing affected polygon IDs when fallback occurs", {
+  library(terra)
+  library(sf)
+
+  ext_test <- terra::ext(0, 3, 0, 3)
+
+  # Environmental raster
+  env_layers <- lapply(seq_len(2), function(i) {
+    r <- terra::rast(ncols = 3, nrows = 3, ext = ext_test,
+                     vals = runif(9, 1, 10), crs = "EPSG:4326")
+    names(r) <- as.character(as.Date("2000-01-01") + (i - 1))
+    r
+  })
+  env_rast <- terra::rast(env_layers)
+
+  # Secondary weight raster: all-zero everywhere
+  sec_weight_rast <- terra::rast(ncols = 3, nrows = 3, ext = ext_test,
+                                  vals = rep(0, 9), crs = "EPSG:4326")
+  names(sec_weight_rast) <- "2000"
+
+  poly1 <- sf::st_polygon(list(matrix(c(0,0, 1.5,0, 1.5,1.5, 0,1.5, 0,0), ncol=2, byrow=TRUE)))
+  poly2 <- sf::st_polygon(list(matrix(c(1.5,1.5, 3,1.5, 3,3, 1.5,3, 1.5,1.5), ncol=2, byrow=TRUE)))
+  polygons_test <- sf::st_sf(
+    geom_id = c("poly_A", "poly_B"),
+    geometry = sf::st_sfc(poly1, poly2, crs = "EPSG:4326")
+  )
+
+  # Run via trans_spatial_agg directly
+  buffered_ext <- terra::ext(polygons_test)
+  spatial_agg_args <- list(fun = "weighted_mean", stack_apply = FALSE, default_weight = 0)
+  weighting_periods <- data.frame(Date_Range = "2000-01-01 to 2000-01-02", stringsAsFactors = FALSE)
+
+  sec_weight_list <- list(sec_weight_rast)
+  env_rast_list <- list(env_rast)
+
+  expect_warning(
+    heat:::trans_spatial_agg(
+      env_rast_list = env_rast_list,
+      sec_weight_rast_list = sec_weight_list,
+      polygons = polygons_test,
+      crop_extent = buffered_ext,
+      trans_type = "none",
+      trans_fun = "none",
+      checked_trans_args = list(),
+      spatial_agg_args = spatial_agg_args,
+      geom_id_col = "geom_id",
+      weighting_periods = weighting_periods,
+      save_path = tempdir(),
+      sec_weights = TRUE,
+      max_cells = 3e7,
+      daily_agg_fun = "none",
+      save_batch_output = FALSE,
+      verbose = 0
+    ),
+    regexp = "poly_A|poly_B",
+    info = "Warning should mention affected polygon IDs"
+  )
+})
+
 # ---- Test Summary ----------------------------------------------------------
 
 if (should_print_banners()) {
