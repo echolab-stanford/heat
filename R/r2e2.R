@@ -346,7 +346,7 @@ r2e2 <- function(env_rast,
     crop_extent <- terra::ext(geometry)
   }
   
-  terra::window(env_rast) <- crop_extent
+  terra::window(env_rast) <- terra::align(crop_extent, env_rast, snap = "out")
   
   # Clean up large objects no longer needed
   gc(verbose = FALSE)

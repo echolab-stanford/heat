@@ -836,7 +836,7 @@ clean_spatial_agg_output <- function(extraction_result, time_steps, geometry, ge
 #'   result <- trans_spatial_agg_polygons(raster_subset, trans_fun, checked_trans_args,
 #'                                    geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1)
 #' }
-trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_args, geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1) {
+trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_args, geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1, fallback_ids_env = NULL) {
   
   step2_start <- Sys.time()
   
@@ -875,6 +875,26 @@ trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_a
   if (verbose == 2) {
     message("          Finished. Elapsed time: ",
             round(difftime(step3_end, step3_start, units = "secs"), 2), " seconds.")
+  }
+
+  # Fallback: if secondary weights were used and produced all-NA results for some polygons,
+  # re-run those polygons with area weights instead.
+  if (!identical(agg_weights, "area")) {
+    agg_raw_mat <- as.matrix(as.data.frame(spatial_agg_raw))
+    all_na_rows <- which(apply(agg_raw_mat, 1, function(x) all(is.na(x))))
+    if (length(all_na_rows) > 0) {
+      fallback_geometry <- geometry[all_na_rows, ]
+      fallback_raw <- do.call(exact_extract,
+                              c(list(x = transformed_raster_subset,
+                                     y = fallback_geometry,
+                                     weights = "area"),
+                                spatial_agg_args,
+                                progress = FALSE))
+      spatial_agg_raw[all_na_rows, ] <- fallback_raw
+      if (!is.null(fallback_ids_env)) {
+        fallback_ids_env$ids <- c(fallback_ids_env$ids, fallback_geometry[[geom_id_col]])
+      }
+    }
   }
 
   step4_start <- Sys.time()
@@ -1193,6 +1213,10 @@ trans_spatial_agg <- function(env_rast_list,
   # Infer transformation variables and max layers
   num_trans_var <- infer_num_trans_var(trans_type = trans_type, trans_args = checked_trans_args)
   max_layers <- floor(65000 / num_trans_var)
+
+  # Collector for polygon IDs that fell back to area weights
+  fallback_collector <- new.env(parent = emptyenv())
+  fallback_collector$ids <- character(0)
   
   # Setup batch directory if saving to disk
   batch_dir <- NULL
@@ -1390,7 +1414,8 @@ trans_spatial_agg <- function(env_rast_list,
             agg_weights = agg_weights,
             spatial_agg_args = spatial_agg_args,
             geom_id_col = geom_id_col,
-            verbose = verbose
+            verbose = verbose,
+            fallback_ids_env = fallback_collector
           )
         }
         
@@ -1526,11 +1551,21 @@ trans_spatial_agg <- function(env_rast_list,
     message("Final result has ", ncol(spatial_agg), " columns.")
     message("===================================================")
   }
+
+  # Warn about any polygons that fell back to area weights
+  fallback_ids_unique <- unique(fallback_collector$ids)
+  if (length(fallback_ids_unique) > 0) {
+    warning(
+      "Secondary weights were all zero or NA for ", length(fallback_ids_unique),
+      " polygon(s) in at least one weighting period. ",
+      "Area weights were used as fallback for those polygons. ",
+      "Affected polygon IDs: ", paste(fallback_ids_unique, collapse = ", "),
+      call. = FALSE
+    )
+  }
   
   return(spatial_agg)
 }
-
-#' Add Metadata Columns to Data Table
 #'
 #' @description
 #' This function adds metadata columns to a spatial aggregation data.table (dt). Specifically, it:
