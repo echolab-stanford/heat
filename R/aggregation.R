@@ -616,15 +616,15 @@ check_spatial_agg_args <- function(args, verbose = 1) {
 #'   daily_sum_raster <- agg_to_daily(your_subdaily_raster, fun = "sum")
 #' }
 #' @export
-agg_to_daily <- function(subdaily_raster, fun = "none") {
+agg_to_daily <- function(subdaily_raster, fun = "none", verbose = 1) {
 
   if (fun == "none") {
-    message("\n     No daily aggregation function provided. Skipping aggregation to daily")
+    if (verbose >= 2) message("\n     No daily aggregation function provided. Skipping aggregation to daily")
     return(subdaily_raster)  # If no aggregation is needed, return the original raster
   }
   
   else if (fun %in% c("mean", "sum")) {
-    message("\n     Aggregating subdaily raster layers to daily values using function: ", fun)
+    if (verbose >= 2) message("\n     Aggregating subdaily raster layers to daily values using function: ", fun)
   } else {
     stop("Invalid aggregation function specified. Use 'mean' or 'sum'.")
   }
@@ -836,7 +836,7 @@ clean_spatial_agg_output <- function(extraction_result, time_steps, geometry, ge
 #'   result <- trans_spatial_agg_polygons(raster_subset, trans_fun, checked_trans_args,
 #'                                    geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1)
 #' }
-trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_args, geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1) {
+trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_args, geometry, agg_weights, spatial_agg_args, geom_id_col, verbose = 1, fallback_ids_env = NULL) {
   
   step2_start <- Sys.time()
   
@@ -875,6 +875,26 @@ trans_spatial_agg_polygons <- function(raster_subset, trans_fun, checked_trans_a
   if (verbose == 2) {
     message("          Finished. Elapsed time: ",
             round(difftime(step3_end, step3_start, units = "secs"), 2), " seconds.")
+  }
+
+  # Fallback: if secondary weights were used and produced all-NA results for some polygons,
+  # re-run those polygons with area weights instead.
+  if (!identical(agg_weights, "area")) {
+    agg_raw_mat <- as.matrix(as.data.frame(spatial_agg_raw))
+    all_na_rows <- which(apply(agg_raw_mat, 1, function(x) all(is.na(x))))
+    if (length(all_na_rows) > 0) {
+      fallback_geometry <- geometry[all_na_rows, ]
+      fallback_raw <- do.call(exact_extract,
+                              c(list(x = transformed_raster_subset,
+                                     y = fallback_geometry,
+                                     weights = "area"),
+                                spatial_agg_args,
+                                progress = FALSE))
+      spatial_agg_raw[all_na_rows, ] <- fallback_raw
+      if (!is.null(fallback_ids_env)) {
+        fallback_ids_env$ids <- c(fallback_ids_env$ids, fallback_geometry[[geom_id_col]])
+      }
+    }
   }
 
   step4_start <- Sys.time()
@@ -1143,6 +1163,7 @@ trans_spatial_agg <- function(env_rast_list,
                               save_path,
                               sec_weights = TRUE,
                               max_cells = 3e7,
+                              daily_agg_fun = "none",
                               save_batch_output = TRUE,
                               overwrite_batch_output = FALSE,
                               verbose = 1) {
@@ -1192,6 +1213,10 @@ trans_spatial_agg <- function(env_rast_list,
   # Infer transformation variables and max layers
   num_trans_var <- infer_num_trans_var(trans_type = trans_type, trans_args = checked_trans_args)
   max_layers <- floor(65000 / num_trans_var)
+
+  # Collector for polygon IDs that fell back to area weights
+  fallback_collector <- new.env(parent = emptyenv())
+  fallback_collector$ids <- character(0)
   
   # Setup batch directory if saving to disk
   batch_dir <- NULL
@@ -1247,9 +1272,48 @@ trans_spatial_agg <- function(env_rast_list,
     dims <- dim(env_rast_subset)
     total_cells <- dims[1] * dims[2] * dims[3]
     
-    # Calculate batch size (will be all layers if under max_cells limit)
-    num_layers <- min(floor(max_cells / (dims[1] * dims[2])), max_layers, dims[3])
-    num_batches <- ceiling(dims[3] / num_layers)
+    # Calculate max batch size (will be all layers if under max_cells limit)
+    max_layers_per_batch <- min(floor(max_cells / (dims[1] * dims[2])), max_layers, dims[3])
+    
+    # Create batch indices, ensuring days aren't split when daily_agg_fun is used
+    if (daily_agg_fun != "none") {
+      # Get dates from layer names
+      layer_names <- names(env_rast_subset)
+      layer_dates <- as.Date(substr(layer_names, 1, 10))
+      
+      # Build batches that don't split days
+      layer_indices <- c()
+      current_pos <- 1
+      
+      while (current_pos <= dims[3]) {
+        # Start a new batch
+        batch_start <- current_pos
+        batch_end <- min(current_pos + max_layers_per_batch - 1, dims[3])
+        
+        # If we haven't reached the end, check if we're splitting a day
+        if (batch_end < dims[3]) {
+          current_date <- layer_dates[batch_end]
+          next_date <- layer_dates[batch_end + 1]
+          
+          # If dates differ, this is a good break point
+          # If same date, move batch_end back to end of previous day
+          if (current_date == next_date) {
+            # Find the last layer of the previous day
+            batch_end <- max(which(layer_dates[batch_start:batch_end] < current_date)) + batch_start - 1
+          }
+        }
+        
+        layer_indices <- c(layer_indices, batch_start)
+        current_pos <- batch_end + 1
+      }
+      
+      num_batches <- length(layer_indices)
+    } else {
+      # Standard batching without day constraints
+      num_layers <- max_layers_per_batch
+      layer_indices <- seq(1, dims[3], by = num_layers)
+      num_batches <- length(layer_indices)
+    }
       
       # Initialize progress bar for multiple batches
       pb <- tryCatch({
@@ -1284,10 +1348,14 @@ trans_spatial_agg <- function(env_rast_list,
       }
       
       # Process batches
-      layer_indices <- seq(1, dims[3], by = num_layers)
       for (j in seq_along(layer_indices)) {
         start_layer <- layer_indices[j]
-        end_layer <- min(start_layer + num_layers - 1, dims[3])
+        # Calculate end_layer based on next batch start or end of data
+        if (j < length(layer_indices)) {
+          end_layer <- layer_indices[j + 1] - 1
+        } else {
+          end_layer <- dims[3]
+        }
         actual_layers <- end_layer - start_layer + 1
         
         # Create batch filename with layer count (using %04d for layers to handle up to 9999)
@@ -1319,6 +1387,11 @@ trans_spatial_agg <- function(env_rast_list,
         # Process batch
         raster_batch <- env_rast_subset[[start_layer:end_layer]]
         
+        # Apply daily aggregation if needed (before transformation/extraction)
+        if (daily_agg_fun != "none") {
+          raster_batch <- agg_to_daily(raster_batch, fun = daily_agg_fun, verbose = 0)
+        }
+        
         if (is_points) {
           # Use point-optimized method
           output_batch <- trans_spatial_agg_points(
@@ -1341,7 +1414,8 @@ trans_spatial_agg <- function(env_rast_list,
             agg_weights = agg_weights,
             spatial_agg_args = spatial_agg_args,
             geom_id_col = geom_id_col,
-            verbose = verbose
+            verbose = verbose,
+            fallback_ids_env = fallback_collector
           )
         }
         
@@ -1477,11 +1551,21 @@ trans_spatial_agg <- function(env_rast_list,
     message("Final result has ", ncol(spatial_agg), " columns.")
     message("===================================================")
   }
+
+  # Warn about any polygons that fell back to area weights
+  fallback_ids_unique <- unique(fallback_collector$ids)
+  if (length(fallback_ids_unique) > 0) {
+    warning(
+      "Secondary weights were all zero or NA for ", length(fallback_ids_unique),
+      " polygon(s) in at least one weighting period. ",
+      "Area weights were used as fallback for those polygons. ",
+      "Affected polygon IDs: ", paste(fallback_ids_unique, collapse = ", "),
+      call. = FALSE
+    )
+  }
   
   return(spatial_agg)
 }
-
-#' Add Metadata Columns to Data Table
 #'
 #' @description
 #' This function adds metadata columns to a spatial aggregation data.table (dt). Specifically, it:

@@ -1,15 +1,17 @@
 # `heat` : Harmonized Environmental Exposure Aggregation Tools
 
 [![](https://zenodo.org/badge/1113902927.svg)](https://doi.org/10.5281/zenodo.17882617)
+[![R Tests](https://github.com/echolab-stanford/heat/actions/workflows/r-tests.yml/badge.svg)](https://github.com/echolab-stanford/heat/actions/workflows/r-tests.yml)
 
 The `heat` R package provides a comprehensive set of tools to compute environmental exposures for administrative boundaries or point locations. Its main aggregation function, `r2e2`, supports various nonlinear transformations (e.g., polynomial, splines, binning), temporal aggregations (e.g., daily, monthly, yearly), and scales efficiently to large raster datasets spanning multiple decades.
 
 ## Installation
 
 ``` r
-# Install devtools if needed
-if (!requireNamespace("devtools", quietly = TRUE)) {
-  install.packages("devtools")
+
+# Install remotes if needed
+if (!requireNamespace("remotes", quietly = TRUE)) {
+  install.packages("remotes")
 }
 
 # Install heat
@@ -86,7 +88,6 @@ For a great explanation of these operations and why their order matters, please 
 
 -  Batch processing: Enables fast processing across multiple decades on regular laptops and high-performance computing clusters
 -  Smart restart: Automatically resumes from last successful batch when re-running after interruption (see performance tips below)
--  Support for temporal resolutions from sub-hourly to yearly in the input environmental raster 
 -  Built-in plots to validate the quality of the output and visualize the exposure distributions
 -  Integrated support for time-varying secondary weights (e.g., yearly population counts)
 -  Raster interpolations: Mean daily temperature, or sinusoidal hourly temperature, interpolated from daily min and max temperature
@@ -232,10 +233,12 @@ For raster datasets with only daily minimum and maximum values (e.g., `tmin` and
 ``` r
 # Interpolate hourly temperature from tmin and tmax
 hourly_temp <- interpol_min_max(
-  min_rast_path = "path/to/tmin/",
-  max_rast_path = "path/to/tmax/",
+  min_rast = "path/to/tmin/",
+  max_rast = "path/to/tmax/",
   geometry = regions,
-  interpol_fun = sinusoidal_interpol,   # Use sinusoidal interpolation
+  start_date = "2020-01-01",
+  end_date = "2020-12-31",
+  interpol_fun = sinusoidal_interpol   # Use sinusoidal interpolation
 )
 
 # Get binned distribution within a day from the hourly data

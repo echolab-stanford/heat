@@ -147,11 +147,15 @@ sinusoidal_interpol <- function(tmin, tmax, hour = 1:24) {
 #'   It handles large raster datasets by splitting them into manageable batches to avoid 
 #'   processing limitations.
 #'
-#' @param min_rast_path Path to the directory containing minimum temperature raster files.
-#' @param max_rast_path Path to the directory containing maximum temperature raster files.
+#' @param min_rast Either a SpatRaster object or a character string path to the directory 
+#'                  containing minimum temperature raster files.
+#' @param max_rast Either a SpatRaster object or a character string path to the directory 
+#'                  containing maximum temperature raster files.
 #' @param geometry An sf object that defines geographical boundaries, used for cropping the rasters.
 #' @param start_date Character string or Date object specifying the start date for interpolation (e.g., "2022-01-01").
+#'                   If NULL and rasters are provided as objects, will use the full date range of the rasters.
 #' @param end_date Character string or Date object specifying the end date for interpolation (e.g., "2022-01-07").
+#'                 If NULL and rasters are provided as objects, will use the full date range of the rasters.
 #' @param interpol_fun A function used for interpolating the temperatures. This function 
 #'                     should accept minimum and maximum temperatures as inputs.
 #' @param interpol_args A list of additional arguments to be passed to the interpolation function.
@@ -161,6 +165,9 @@ sinusoidal_interpol <- function(tmin, tmax, hour = 1:24) {
 #'                  the interpolated raster. If NULL (default), the raster is only returned 
 #'                  without saving to disk. When provided, the output raster is saved as a 
 #'                  GeoTIFF split up into batches.
+#' @param overwrite_batches Logical indicating whether to overwrite existing batch files.
+#'                          If FALSE (default), existing batches will be skipped and processing
+#'                          will resume from the next missing batch (smart restart).
 #' @param max_output_layers An integer defining the maximum number of output layers allowed; 
 #'                          default is set to 30,000 to prevent exceeding raster writing limits.
 #'
@@ -169,10 +176,10 @@ sinusoidal_interpol <- function(tmin, tmax, hour = 1:24) {
 #'
 #' @examples
 #' \dontrun{
-#'   # Example using the interpol_min_max function:
+#'   # Example 1: Using file paths
 #'   result <- interpol_min_max(
-#'     min_rast_path = "path/to/tmin",
-#'     max_rast_path = "path/to/tmax",
+#'     min_rast = "path/to/tmin",
+#'     max_rast = "path/to/tmax",
 #'     geometry = my_regions,
 #'     start_date = "2022-01-01",
 #'     end_date = "2022-01-07",
@@ -180,10 +187,20 @@ sinusoidal_interpol <- function(tmin, tmax, hour = 1:24) {
 #'     interpol_args = list(),
 #'     daily_agg_fun = "mean"
 #'   )
+#'   
+#'   # Example 2: Using SpatRaster objects
+#'   tmin_rast <- rast("path/to/tmin.tif")
+#'   tmax_rast <- rast("path/to/tmax.tif")
+#'   result <- interpol_min_max(
+#'     min_rast = tmin_rast,
+#'     max_rast = tmax_rast,
+#'     geometry = my_regions,
+#'     interpol_fun = sinusoidal_interpol
+#'   )
 #' }
 #' 
 #' @export
-interpol_min_max <- function(min_rast_path, max_rast_path, geometry, start_date, end_date, interpol_fun, interpol_args = NULL, daily_agg_fun = "none", save_path = NULL, max_cells = 3e7, max_output_layers = 30000) {
+interpol_min_max <- function(min_rast, max_rast, geometry, start_date = NULL, end_date = NULL, interpol_fun, interpol_args = NULL, daily_agg_fun = "none", save_path = NULL, overwrite_batches = FALSE, max_cells = 3e7, max_output_layers = 30000) {
   
   # Check if save_path is provided and create directory if needed
   save_path_provided <- !is.null(save_path) && save_path != ""
@@ -193,19 +210,52 @@ interpol_min_max <- function(min_rast_path, max_rast_path, geometry, start_date,
   }
   
   # ---- Step 1: Load tmin and tmax rasters -----
-
-  # Convert start_date and end_date to Date objects and get year range
-  start_date <- as.Date(start_date)
-  end_date <- as.Date(end_date)
-  boundary_date_range <- c(year(start_date), year(end_date))
   
-  # Read the environmental rasters from the specified path, filtering by date range
-  files_tmin <- filter_read_rast(min_rast_path, year_range = boundary_date_range)
-  files_tmax <- filter_read_rast(max_rast_path, year_range = boundary_date_range)
+  # Check if inputs are SpatRaster objects or paths
+  min_is_raster <- inherits(min_rast, "SpatRaster")
+  max_is_raster <- inherits(max_rast, "SpatRaster")
   
-  # Read the environmental rasters into a RasterStack
-  tmin_raster <- rast(file.path(min_rast_path, files_tmin))
-  tmax_raster <- rast(file.path(max_rast_path, files_tmax))
+  if (min_is_raster && max_is_raster) {
+    # Both are rasters - use them directly
+    tmin_raster <- check_raster_layers(min_rast, "min_rast")
+    tmax_raster <- check_raster_layers(max_rast, "max_rast")
+    
+    # If start_date and end_date are NULL, get from raster layer names
+    if (is.null(start_date) || is.null(end_date)) {
+      raster_dates <- as.Date(names(tmin_raster))
+      if (is.null(start_date)) start_date <- min(raster_dates, na.rm = TRUE)
+      if (is.null(end_date)) end_date <- max(raster_dates, na.rm = TRUE)
+    } else {
+      start_date <- as.Date(start_date)
+      end_date <- as.Date(end_date)
+    }
+    
+  } else if (!min_is_raster && !max_is_raster) {
+    # Both are paths - read them
+    if (is.null(start_date) || is.null(end_date)) {
+      stop("start_date and end_date must be provided when min_rast and max_rast are file paths.")
+    }
+    
+    # Convert start_date and end_date to Date objects and get year range
+    start_date <- as.Date(start_date)
+    end_date <- as.Date(end_date)
+    boundary_date_range <- c(year(start_date), year(end_date))
+    
+    # Read the environmental rasters from the specified path, filtering by date range
+    files_tmin <- filter_read_rast(min_rast, year_range = boundary_date_range)
+    files_tmax <- filter_read_rast(max_rast, year_range = boundary_date_range)
+    
+    # Read the environmental rasters into a RasterStack
+    tmin_raster <- rast(file.path(min_rast, files_tmin))
+    tmax_raster <- rast(file.path(max_rast, files_tmax))
+    
+    # Check raster layers (handles time dimension fallback)
+    tmin_raster <- check_raster_layers(tmin_raster, "min_rast")
+    tmax_raster <- check_raster_layers(tmax_raster, "max_rast")
+    
+  } else {
+    stop("min_rast and max_rast must both be either SpatRaster objects or character strings (file paths).")
+  }
   
   # Crop raster to spatial data bounding box for efficiency
   # For point geometries, buffer by one cell to ensure cells containing points are included
@@ -275,9 +325,41 @@ interpol_min_max <- function(min_rast_path, max_rast_path, geometry, start_date,
   # Initialize a list to store results
   output_list <- list()
   
+  # Check for existing batches if save_path is provided
+  existing_batches <- integer(0)
+  if (save_path_provided) {
+    interpolated_rasters_path <- file.path(save_path, "interpolated_rasters")
+    if (dir.exists(interpolated_rasters_path)) {
+      existing_files <- list.files(interpolated_rasters_path, pattern = "^batch_\\d+\\.tif$")
+      if (length(existing_files) > 0) {
+        existing_batches <- as.integer(gsub("batch_(\\d+)\\.tif", "\\1", existing_files))
+        if (!overwrite_batches) {
+          message("\nFound ", length(existing_batches), " existing batch files.")
+          message("Smart restart enabled: will skip existing batches.")
+        }
+      }
+    }
+  }
+  
   # Create indices to split layers
   layer_indices <- seq(1, dims_tmin[3], by = max_layers)
   for (j in seq_along(layer_indices)) {
+    
+    # Check if this batch already exists and skip if not overwriting
+    batch_file <- if (save_path_provided) {
+      file.path(interpolated_rasters_path, sprintf("batch_%04d.tif", j))
+    } else {
+      NULL
+    }
+    
+    if (save_path_provided && !overwrite_batches && j %in% existing_batches) {
+      message("\n---- Skipping batch ", j, "/", num_batches, " (already exists) ----")
+      
+      # Load existing batch for return value
+      existing_rast <- rast(batch_file)
+      output_list[[j]] <- existing_rast
+      next
+    }
     
     # start timer
     timer_start <- Sys.time()
@@ -302,25 +384,9 @@ interpol_min_max <- function(min_rast_path, max_rast_path, geometry, start_date,
     
     # ---- Step 3: Apply the interpolation function to the rasters -----
     
-    if (save_path_provided) {
-      # create an 'interpolated_rasters' folder in the output directory if it does not exist
-      interpolated_rasters_path <- file.path(save_path, "interpolated_rasters")
-      if (!dir.exists(interpolated_rasters_path)) {
-        dir.create(interpolated_rasters_path, recursive = TRUE)
-      }
-      
-      interpolated_rast <- do.call(terra::xapp,
-                               c(list(x = tmin_batch, y = tmax_batch, fun = interpol_fun, filename = file.path(interpolated_rasters_path, paste0("batch_", j, ".tif")), overwrite = TRUE),
-                                 interpol_args))
-    } else {
-      # If not saving, just apply the function without saving the file
-      interpolated_rast <- do.call(terra::xapp,
-                               c(list(x = tmin_batch, y = tmax_batch, fun = interpol_fun),
-                                 interpol_args))
-    }
-    
-    # # Name layers in the format %Y-%m-%d %H:%M
-    # names(interpolated_rast) <- layer_names
+    interpolated_rast <- do.call(terra::xapp,
+                             c(list(x = tmin_batch, y = tmax_batch, fun = interpol_fun),
+                               interpol_args))
     
     # Ensure that the output remains a SpatRaster
     if (!inherits(interpolated_rast, "SpatRaster")) {
@@ -330,6 +396,21 @@ interpol_min_max <- function(min_rast_path, max_rast_path, geometry, start_date,
     # ---- Step 4: Aggregate the sub-daily raster to daily resolution (if daily_agg_fun is not 'none') -----
     
     output_batch <- agg_to_daily(interpolated_rast, fun = daily_agg_fun)  # or "sum" based on needs
+    
+    # ---- Step 5: Save the output (after aggregation) -----
+    
+    if (save_path_provided) {
+      # create an 'interpolated_rasters' folder in the output directory if it does not exist
+      if (!dir.exists(interpolated_rasters_path)) {
+        dir.create(interpolated_rasters_path, recursive = TRUE)
+      }
+      
+      # Save the aggregated output with compression
+      terra::writeRaster(output_batch, 
+                        filename = batch_file,
+                        overwrite = overwrite_batches,
+                        gdal = c("COMPRESS=DEFLATE", "PREDICTOR=2", "ZLEVEL=6"))
+    }
     
     # stop the timer
     timer_end <- Sys.time()

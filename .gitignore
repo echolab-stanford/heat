@@ -4,7 +4,6 @@
 .httr-oauth
 .DS_Store
 .quarto
-/utils
 /dev
-/plots
-/.quarto/
+/vis
+
