@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>readme</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="README_files/libs/clipboard/clipboard.min.js"></script>
+<script src="README_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="README_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="README_files/libs/quarto-html/popper.min.js"></script>
+<script src="README_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="README_files/libs/quarto-html/anchor.min.js"></script>
+<link href="README_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="README_files/libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="README_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="README_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="README_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="heat-harmonized-environmental-exposure-aggregation-tools" class="level1">
+<h1><code>heat</code> : Harmonized Environmental Exposure Aggregation Tools</h1>
+<p><a href="https://doi.org/10.5281/zenodo.17882617"><img src="https://zenodo.org/badge/1113902927.svg" class="img-fluid"></a></p>
+<p>The <code>heat</code> R package provides a comprehensive set of tools to compute environmental exposures for administrative boundaries or point locations. Its main aggregation function, <code>r2e2</code>, supports various nonlinear transformations (e.g., polynomial, splines, binning), temporal aggregations (e.g., daily, monthly, yearly), and scales efficiently to large raster datasets spanning multiple decades.</p>
+<section id="installation" class="level2">
+<h2 class="anchored" data-anchor-id="installation">Installation</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install devtools if needed</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"devtools"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"devtools"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Install heat</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"echolab-stanford/heat"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="quick-start" class="level2">
+<h2 class="anchored" data-anchor-id="quick-start">Quick Start</h2>
+<section id="example-1-polynomial-transformation-and-aggregation-to-monthly" class="level3">
+<h3 class="anchored" data-anchor-id="example-1-polynomial-transformation-and-aggregation-to-monthly">Example 1: Polynomial Transformation and Aggregation to Monthly</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(heat)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load dataframe containing an sf geometry (polygons or points)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>regions <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"regions.shp"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Load environmental raster</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>temperature <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="st">"temperature.tif"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Polynomial transformation and aggregation to monthly </span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>exposures <span class="ot">&lt;-</span> <span class="fu">r2e2</span>(</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">env_rast =</span> temperature,            <span class="co"># Environmental raster</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> regions,                <span class="co"># Spatial geometries</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">trans_type =</span> <span class="st">"polynomial"</span>,         <span class="co"># Transformation type</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">degree =</span> <span class="dv">4</span>,                        <span class="co"># Polynomial degree</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">out_temp_res =</span> <span class="st">"monthly"</span>           <span class="co"># Aggregate to monthly</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Access results</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(exposures<span class="sc">$</span>monthly_long)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   geom_id  trans_type    date  year month   degree_1 degree_2   degree_3 degree_4</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;char&gt;      &lt;char&gt;  &lt;fctr&gt; &lt;int&gt; &lt;int&gt;      &lt;num&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt; </span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  region_1  polynomial 1999-12  1999    12  0.3703647 35.44290  42.662160 2277.396 </span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  region_1  polynomial 2000-01  2000     1 -0.9477844 37.63980 -50.418337 2270.166</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  region_1  polynomial 2000-02  2000     2 -1.2895124 36.79065 -75.434199 2400.315</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  region_2  polynomial 1999-12  1999    12  0.1551976 31.36412  33.632878 1814.176</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  region_2  polynomial 2000-01  2000     1  0.4783851 28.49742   7.187916 1652.574</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="example-2-binning-with-secondary-weights" class="level3">
+<h3 class="anchored" data-anchor-id="example-2-binning-with-secondary-weights">Example 2: Binning with Secondary Weights</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Population-weighted temperature aggregation</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>exposures <span class="ot">&lt;-</span> <span class="fu">r2e2</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">env_rast =</span> <span class="st">"path/to/temperature/"</span>,           <span class="co"># A directory name works too</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sec_weight_rast =</span> <span class="st">"path/to/population/"</span>,     <span class="co"># ... also for secondary weights</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> <span class="st">"path/to/regions.shp"</span>,            <span class="co"># ... and spatial geometries</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col =</span> <span class="st">"region_id"</span>,                   <span class="co"># Optional: keep only ID column</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> <span class="st">"2000-01-01"</span>,                   <span class="co"># Optional: Filter raster date range</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">end_date =</span> <span class="st">"2020-12-31"</span>,                     <span class="co"># Default: full date range</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">out_format =</span> <span class="st">"all"</span>,                          <span class="co"># Both 'long' and 'wide' output               </span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">trans_type =</span> <span class="st">"bin"</span>,                          <span class="co"># Bin transformation</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>),              <span class="co"># Bin breaks</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">out_temp_res =</span> <span class="st">"daily"</span>,                      <span class="co"># Keep daily resolution</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">save_path =</span> <span class="st">"path/to/output"</span>,                <span class="co"># Save outputs locally</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="dv">2</span>                                  <span class="co"># Show detailed messages</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="r2e2-raster-to-environmental-exposures" class="level2">
+<h2 class="anchored" data-anchor-id="r2e2-raster-to-environmental-exposures"><code>r2e2()</code>: Raster to Environmental Exposures</h2>
+<p>The <code>r2e2</code> function of the <code>heat</code> package aggregates environmental raster data to environmental exposures following these three steps:</p>
+<ol type="1">
+<li><strong>Transformation</strong>: Applies the specified nonlinear transformation to each raster cell’s time series.</li>
+<li><strong>Spatial Aggregation</strong>: Averages the transformed raster values over each geometry using <code>exactextractr</code>, optionally using secondary weights.</li>
+<li><strong>Temporal Aggregation</strong>: Aggregates the spatially averaged values to the desired temporal resolution (e.g., monthly, yearly).</li>
+</ol>
+<p>For a great explanation of these operations and why their order matters, please refer to <a href="https://www.sciencedirect.com/science/article/pii/S1364815224002639">Lidell et al.&nbsp;(2025)</a>. The <code>r2e2</code> part of the <code>heat</code> package closely aligns in purpose with their <code>stagg</code> package but aims to provide a faster, more robust approach. <code>heat</code> also extends the <code>stagg</code> functionality with these additional features:</p>
+<ul>
+<li>Batch processing: Enables fast processing across multiple decades on regular laptops and high-performance computing clusters</li>
+<li>Smart restart: Automatically resumes from last successful batch when re-running after interruption (see performance tips below)</li>
+<li>Support for temporal resolutions from sub-hourly to yearly in the input environmental raster</li>
+<li>Built-in plots to validate the quality of the output and visualize the exposure distributions</li>
+<li>Integrated support for time-varying secondary weights (e.g., yearly population counts)</li>
+<li>Raster interpolations: Mean daily temperature, or sinusoidal hourly temperature, interpolated from daily min and max temperature</li>
+<li>Long and wide output formats</li>
+<li>User provided custom transformation functions on top of standard built-in transformations (Polynomial, Splines, Binning)</li>
+<li>Custom arguments can be passed to the transformation functions and the spatial aggregation via <code>exact_extract()</code> to customize the processing</li>
+</ul>
+<p>We are currently finishing up additional functions downstream of <code>r2e2</code> such as calculating unit specific lags.</p>
+<section id="transformation-types" class="level3">
+<h3 class="anchored" data-anchor-id="transformation-types">Transformation Types</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 29%">
+<col style="width: 20%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Description</th>
+<th>Function</th>
+<th>Required Arguments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>"none"</code></td>
+<td>No transformation</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="even">
+<td><code>"polynomial"</code></td>
+<td>Polynomial</td>
+<td><code>stats::poly()</code></td>
+<td><code>degree = &lt;integer&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>"natural_spline"</code></td>
+<td>Natural cubic spline</td>
+<td><code>splines::ns()</code></td>
+<td><code>knots = c(...)</code></td>
+</tr>
+<tr class="even">
+<td><code>"b_spline"</code></td>
+<td>B-spline</td>
+<td><code>splines::bs()</code></td>
+<td><code>knots = c(...)</code></td>
+</tr>
+<tr class="odd">
+<td><code>"bin"</code></td>
+<td>Binning</td>
+<td><code>heat::create_bins()</code></td>
+<td><code>breaks = c(...)</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="input-data-requirements" class="level3">
+<h3 class="anchored" data-anchor-id="input-data-requirements">Input Data Requirements</h3>
+<section id="environmental-raster" class="level4">
+<h4 class="anchored" data-anchor-id="environmental-raster">Environmental Raster</h4>
+<p>A raster (<code>SpatRaster</code> object), or a directory name of either GeoTIFF (<code>.tif</code>) or NetCDF (<code>.nc</code>) raster files meeting the following requirements:</p>
+<ul>
+<li>Longitude Format: Must use -180 to 180 degrees (not 0 to 360). Use <code>terra::rotate()</code> to convert if needed.</li>
+<li>Layer Names: Must be dates in format <code>YYYY-MM-DD HH:MM</code>, <code>YYYY-MM-DD</code>, <code>YYYY-MM</code>, or <code>YYYY</code> (e.g., <code>2020-01-15 12:00</code>, <code>2020-01-15</code>, <code>2020-01</code>, <code>2020</code>). It also works if the time dimension (<code>terra::time(raster)</code>) instead of the layernames contains the time steps.</li>
+<li>Coverage: Will be cropped to the geometry’s extent automatically but must overlap with it.</li>
+<li>Subdaily Aggregation: Sub-daily data (e.g.&nbsp;hourly) can be aggregated to daily using <code>daily_agg_fun = "mean"</code> or <code>"sum"</code>. This step is done before the transformation and speeds up the processing without introducing bias.</li>
+</ul>
+<p>These requirements are automatically checked within <code>r2e2()</code>, but can be checked separately:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate raster structure</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>env_rast <span class="ot">&lt;-</span> <span class="fu">rast</span>(<span class="st">"path/to/climate/data/"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">check_raster</span>(env_rast)                     <span class="co"># Checks longitude, layer names, temporal resolution</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="secondary-weight-rasters-optional" class="level4">
+<h4 class="anchored" data-anchor-id="secondary-weight-rasters-optional">Secondary Weight Rasters (Optional)</h4>
+<p>Used to weight spatial aggregation (e.g., population-weighted averages). Same format and requirements as environmental raster data, except:</p>
+<ul>
+<li>Values: Should be positive (e.g., population counts, crop areas)</li>
+<li>CRS: Ideally matches environmental raster CRS. If not, will be reprojected to match environmental raster CRS using bilinear projection.</li>
+<li>Resolution: Will be resampled (using <code>terra::resample(.., method = "average")</code>) to match environmental raster resolution.</li>
+</ul>
+<p><strong>Note</strong>: Secondary weight layers split up the environmental raster into weighting periods. Each weight layer creates a separate period with the layers of the environmental raster that are closest to it in time.</p>
+</section>
+<section id="spatial-geometries" class="level4">
+<h4 class="anchored" data-anchor-id="spatial-geometries">Spatial Geometries</h4>
+<p>A <code>sf</code> object (polygons or points) or path to spatial file (<code>.gpkg</code>, <code>.shp</code>, <code>.geojson</code>, <code>.json</code>, <code>.fgb</code>, <code>.rds</code>, <code>.parquet</code>) meeting the following requirements:</p>
+<ul>
+<li>CRS: Any valid CRS is accepted, will be reprojected to match environmental raster CRS automatically.</li>
+<li>ID Column: Ideally a unique identifier column (specified via <code>geom_id_col</code>). If no ID column is provided, the row index will be used and all columns retained.</li>
+<li>Geometry Type: POLYGON, MULTIPOLYGON, POINT, or MULTIPOINT</li>
+</ul>
+<p>Validation is executed automatically within <code>r2e2()</code>, but can be run separately:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate and clean spatial geometries</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>regions <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"regions.gpkg"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>validated_regions <span class="ot">&lt;-</span> <span class="fu">check_spatial_file</span>(regions)  <span class="co"># Checks CRS, validates geometries</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="output-formats" class="level3">
+<h3 class="anchored" data-anchor-id="output-formats">Output Formats</h3>
+<p>Depending on the input resolution and chosen temporal aggregation, results include:</p>
+<ul>
+<li><code>daily_long</code>: Long format (rows: geometry-date pairs) in daily resolution.</li>
+<li><code>daily_wide</code>: Wide format (rows: geometry, columns: dates) in daily resolution.</li>
+<li><code>monthly_long</code>: Long format in monthly resolution. See Example 1 above.</li>
+<li>…</li>
+<li><code>yearly_wide</code>: Wide format in yearly resolution</li>
+<li><code>area_weights</code>: Area weights for each geometry-cell pair</li>
+</ul>
+<p><strong>Example:</strong></p>
+<ul>
+<li>Input: daily data, <code>out_temp_res = "monthly"</code> → outputs: <code>daily_wide</code>, <code>daily_long</code>, <code>monthly_wide</code>, <code>monthly_long</code>.</li>
+<li>Choose output format with <code>out_format = "wide"</code>, <code>"long"</code>, or <code>"all"</code>.</li>
+<li>Saved files use the same naming: <code>daily_long.parquet</code>, <code>monthly_wide.parquet</code>, etc.</li>
+</ul>
+</section>
+</section>
+<section id="validation" class="level2">
+<h2 class="anchored" data-anchor-id="validation">Validation</h2>
+<section id="built-in-validation" class="level3">
+<h3 class="anchored" data-anchor-id="built-in-validation">Built-in Validation</h3>
+<p>Enable built-in validation to visualize and verify your results during processing:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>exposures <span class="ot">&lt;-</span> <span class="fu">r2e2</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">env_rast =</span> temperature,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> regions,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col =</span> <span class="st">"region_id"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">trans_type =</span> <span class="st">"polynomial"</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">degree =</span> <span class="dv">4</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">out_temp_res =</span> <span class="st">"monthly"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation =</span> <span class="cn">TRUE</span>,                         <span class="co"># Generate validation plots</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_var =</span> <span class="st">"degree_1"</span>,               <span class="co"># Variable to visualize</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_var_name =</span> <span class="st">"Temperature (°C)"</span>,  <span class="co"># Variable name for plots</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="dv">1</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="validation-after-processing" class="level3">
+<h3 class="anchored" data-anchor-id="validation-after-processing">Validation after processing</h3>
+<p>Validation can also be run separately on existing results:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate after processing</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">validate_r2e2</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">results =</span> exposures,                       <span class="co"># Output from r2e2()</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> regions,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col =</span> <span class="st">"region_id"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_var =</span> <span class="st">"degree_1"</span>,               <span class="co"># Variable to visualize</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">validation_var_name =</span> <span class="st">"Temperature (°C)"</span>   <span class="co"># Variable name for plots</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Validation produces plots showing:</p>
+<ul>
+<li>Maps of spatial averages and missing values</li>
+<li>Time series visualizing trends over the years</li>
+<li>Summary statistics and seasonal distributions</li>
+<li>Grid cell alignment verification</li>
+<li>Cell count diagnostics</li>
+</ul>
+</section>
+</section>
+<section id="interpolation" class="level2">
+<h2 class="anchored" data-anchor-id="interpolation">Interpolation</h2>
+<p>For raster datasets with only daily minimum and maximum values (e.g., <code>tmin</code> and <code>tmax</code>), <code>heat</code> provides interpolation functions to estimate hourly or mean daily values:</p>
+<ul>
+<li><strong><code>mean_interpol()</code></strong>: Simple average of min and max for daily mean values</li>
+<li><strong><code>sinusoidal_interpol()</code></strong>: Sinusoidal curve fitting for hourly estimates</li>
+</ul>
+<section id="example-interpolating-to-hourly-temperature" class="level3">
+<h3 class="anchored" data-anchor-id="example-interpolating-to-hourly-temperature">Example: Interpolating to Hourly Temperature</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Interpolate hourly temperature from tmin and tmax</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>hourly_temp <span class="ot">&lt;-</span> <span class="fu">interpol_min_max</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_rast_path =</span> <span class="st">"path/to/tmin/"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_rast_path =</span> <span class="st">"path/to/tmax/"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> regions,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">interpol_fun =</span> sinusoidal_interpol,   <span class="co"># Use sinusoidal interpolation</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Get binned distribution within a day from the hourly data</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>exposures <span class="ot">&lt;-</span> <span class="fu">r2e2</span>(</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">env_rast =</span> hourly_temp,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> regions,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">trans_type =</span> <span class="st">"bin"</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">10</span>, <span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>),</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">out_temp_res =</span> <span class="st">"daily"</span>                 <span class="co"># Aggregate back to daily</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="performance-tips" class="level2">
+<h2 class="anchored" data-anchor-id="performance-tips">Performance Tips</h2>
+<ul>
+<li>Use <code>max_cells</code> to control memory usage. Default are 30 million (<code>3e7</code>) cells processed at once. Lower values will decrease memory usage.</li>
+<li>Set <code>verbose = 2</code> for detailed progress information and debugging.</li>
+<li>For points, the package automatically uses an optimized extraction method</li>
+<li>Enable smart restart, which automatically resumes from the last successful batch when re-running after an interruption. This is enabled by default when a <code>save_path</code> is provided, <code>save_batch_output = TRUE</code>, and <code>overwrite_batch_output = FALSE</code>.</li>
+<li>If the polygons are far apart, e.g.&nbsp;spanning multiple countries or continents, the soon to be released <code>r2e2_country()</code> function will accelerate processing by splitting the raster by country.</li>
+</ul>
+</section>
+<section id="shocks" class="level2">
+<h2 class="anchored" data-anchor-id="shocks">Shocks</h2>
+<p>For wide datasets produced by the r2e2 function, and given a dataframe with geometry IDs and dates (e.g., the starting date of a program), the <code>heat</code> package provides functions to estimate measures of climate shocks or deviations with respect to a historical baseline. The main of this functions, shocks_wrapper, receives inputs to create a sequence of dates foe which the mean and standard deviation are estimated for a given climate variable, and then compared to a baseline. The user can specify the size of the window, the number of time-steps into which it is divided, the nature of the historical window (whether dynamic or fixed), and many other configurations by defining the following parameters:</p>
+<ul>
+<li><strong><code>window</code></strong>: the size in time units (i.e., days when the resolution is daily, months when it is monthly) of the dates window</li>
+<li><strong><code>start</code></strong>: the offset in days indicating the starting date of the window with respect to the date associated with a geometry.</li>
+<li><strong><code>hist_lags</code></strong>: whenever the historical baseline is dynamic, the number of past years to include to create the baseline (e.g., hist_lags = 10 means that the historical baseline will be created with the climate measures for the 10 years before theyear of the geometry date).</li>
+<li><strong><code>align</code></strong>: whether the date sequence is left- or right-aligned with respect to the geometry date. Left-alignment means that the sequence contains dates AFTER the polygon date. Right-alingment means that the sequence includes dates BEFORE the polygon date</li>
+<li><strong><code>time_step_size</code></strong>: the number of days (months) in each temporal bin that divides the date sequence (e.g., <code>time_step_size</code> = 30 divides a daily date sequence of length <code>window</code> into groups or bins of 30 days).</li>
+<li><strong><code>disjoint</code></strong>: whether the groups into which the date sequence is divide shall be considered disjoint or overlapping (default option). Disjoint groups never overlap. For example, for a date sequence of 30 days with 3 groups of 10 days (<code>time_step_size</code> = 10), disjoint groups have the form: <strong>group 1</strong>: day 1 - day 10 | <strong>group 2</strong>: day 11 - day 20 | <strong>group 3</strong>: day 21 - day 30. On the other hand, overlapping groups have the form: <strong>group 1</strong>: day 1- day 10 | <strong>group 2</strong>: day 1 - day 20 | <strong>group 3</strong>: day 1- day 30.</li>
+<li><strong><code>window_spec</code></strong>: whether the historical window is dynamic, fixed or both. When it is dynamic, the starting and ending dates of the historical window for a given geometry depend on the specific date associated to that geometry and the number of historic lags. The window sequence corresponding to a given geometry date will be replicated for a number of past years (as specified by the <code>hist_lags</code> argument) to form the dynamic historical window. Therefore, the period to build the dynamic historical window will depend on the year of each geometry date and will vary across geometries. On the contrary, when the historical window is fixed, the historical baseline is created by replicating the window sequence of a given geometry date within a fixed range of time, which is defined by the <code>start_date</code> and <code>end_date</code> parameters. All historic windows are therefore created within the same range, regardless of the year of the geometry date.</li>
+<li><strong><code>start_date</code></strong>: whenever the historical window is fixed, the initial date of the window of time used to create the historical baseline.</li>
+<li><strong><code>end_date</code></strong>: whenever the historical window is fixed, the end date of the window of time used to create the historical baseline.</li>
+<li><strong><code>int_threshold</code></strong>: some date sequence might fall outside of the date range of the dataframe produced by the <code>r2e2</code> function. This parameter controls the proportion of dates of a date sequence and its corresponding historical baseline that must be present in the dataframe to be considered valid for analysis.</li>
+</ul>
+<section id="notes-on-performance" class="level3">
+<h3 class="anchored" data-anchor-id="notes-on-performance">Notes on performance:</h3>
+<p>The <code>shocks_warpper</code> function might deal with massive objects (e.g., parquet files containing daily climate measures spanning a long period). Therefore, the function includes several parameters to balance the need for computational speed and the memory limits. These parameters are:</p>
+<ul>
+<li><p><strong><code>conditions_list</code></strong>: A named list of conditions to query the parquet file with climate measures. The named conditions should be:</p>
+<ol type="1">
+<li>data_path: A character string with the path to the parquet file.</li>
+<li>geom_id: A vector of unique geometry IDs indicating the geometries for which the shocks should be estimated.</li>
+<li>trans_type: A character string indicating the type of transformations to be included (e.g., “polynomial”).</li>
+<li>trans_var: A character string indicating the degrees of the transformation to include (e.g, c(“degree_2”, “degree_3”)).</li>
+<li>product_temp_res: A character indicating the temporal resolution of the product. Must be one of the following: “daily” or “monthly” (“yearly” not supported yet).</li>
+</ol></li>
+<li><p><strong><code>date_tolerance_days</code></strong>: some geometries can be grouped based on the proximity of their dates. Doing so helps reduce the number of date columns that need to be loaded per geometry group and, as such, the memory usage of the function. Setting a lower number means that groups are smaller in size, but might increases running times as more groups are produced.</p></li>
+<li><p><strong><code>max_group_size</code></strong>: this parameters defines the maximum number of geometries that are allowd to be in a group (i.e., after grouping geometries by date proximity). This prevents the creation of extremely large groups, which reduces memory usage, but might increase running times by creating more groups to process.</p></li>
+<li><p><strong><code>prop_cores</code></strong>: in some cases, parallelization might be desired. The function performs parallelization by using the future callr backend, using a proportion <code>prop_cores</code> of available workers. Parallelization might reduce running times, but using multiple cores might increase memory usage substantially. Keep <code>prop_cores</code> near 0 (or 0 if you want sequential processing) if shocks are being estimated for long date sequences and using long historic sequences (e.g., 20 years of historic lags).</p></li>
+</ul>
+</section>
+<section id="example-estimating-climate-shocks-with-different-historical-window-schemes" class="level3">
+<h3 class="anchored" data-anchor-id="example-estimating-climate-shocks-with-different-historical-window-schemes">Example: estimating climate shocks with different historical window schemes</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate shocks with a dynamic window</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>climate_shocks_dynamic <span class="ot">&lt;-</span> <span class="fu">shocks_wrapper</span>(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">pol_date_pairs =</span> poly_date_df,        <span class="co"># Dataframe with a geometry id column and a date column</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">conditions_list =</span> conditions,         <span class="co"># A list with condtions to filter the parquet file with climate measure</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col_parquet =</span> <span class="st">"geom_id"</span>,      <span class="co"># The name of the column in the parquet file that contains the geometry ids </span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col_df =</span> <span class="st">"poly_id"</span>,           <span class="co"># The name of the column in the geometry-dates dataframe with the geometry ids</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">date_id_col_df =</span> <span class="st">"int_date"</span>,          <span class="co"># The name of the column in the geometry-dates dataframe with the dates</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">window =</span> <span class="dv">10</span>,                          <span class="co"># Create a window of 10 days (given a daily resolution, as specified in the conditions list)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">start =</span> <span class="dv">0</span>,                            <span class="co"># No offset with respect to the geometry date</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">hist_lags =</span> <span class="dv">10</span>,                       <span class="co"># Use 10 past years to build the dynamic baseline</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">align =</span> <span class="st">"right"</span>,                      <span class="co"># The date sequence includes dates previous to the geometry date</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">time_step_size =</span> <span class="dv">5</span>,                   <span class="co"># The date sequence is divided into N groups, each of 5 five days</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">window_spec =</span> <span class="st">"dynamic"</span>,              <span class="co"># Create a dynamic baseline</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> <span class="cn">NULL</span>,                    <span class="co"># Not required if the window is dynamic</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">stop_date =</span> <span class="cn">NULL</span>,                             </span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">disjoint=</span> <span class="cn">FALSE</span>,                      <span class="co"># Use overlapping groups</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">int_threshold =</span> <span class="fl">0.8</span>,                  <span class="co"># Intersection threshold</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">prop_cores =</span> <span class="fl">0.2</span>,                     <span class="co"># Use 20% of avalaible workers</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">date_tolerance_days =</span> <span class="dv">10</span>,             <span class="co"># Group polygons for which the date is at most 10 days apart</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_group_size =</span> <span class="dv">10</span>,                  <span class="co"># Polygon groups should have at most 10 polygons</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">query =</span> <span class="st">"temperate_shocks"</span>,           <span class="co"># Name to be assigned to the final output</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_path =</span>  <span class="fu">file.path</span>(<span class="st">"..."</span>),      <span class="co"># Path were the final output should be saved</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">error_log_path =</span> <span class="fu">file.path</span>(<span class="st">"..."</span>)     <span class="co"># Output were the error logs will be saved</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate shocks with a fixed window</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>climate_shocks_dynamic <span class="ot">&lt;-</span> <span class="fu">shocks_wrapper</span>(</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">pol_date_pairs =</span> poly_date_df,               </span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">conditions_list =</span> conditions,                </span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col_parquet =</span> <span class="st">"geom_id"</span>,              </span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col_df =</span> <span class="st">"poly_id"</span>,                  </span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">date_id_col_df =</span> <span class="st">"int_date"</span>,                 </span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">window =</span> <span class="dv">10</span>,                                 </span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">start =</span> <span class="dv">0</span>,                                   </span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">hist_lags =</span> <span class="dv">0</span>,                               <span class="co"># Set to zero for fixed windows</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">align =</span> <span class="st">"right"</span>,                             </span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">time_step_size =</span> <span class="dv">5</span>,                          </span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">window_spec =</span> <span class="st">"fixed"</span>,                       <span class="co"># Create a fixed baseline</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> <span class="st">"1980-01-01"</span>,                   <span class="co"># Range for the fixed window begins on this date</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">stop_date =</span> <span class="st">"1990-01-01"</span>,                    <span class="co"># Range for the fixed window ends on this date         </span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">disjoint=</span> <span class="cn">FALSE</span>,                             </span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">int_threshold =</span> <span class="fl">0.8</span>,                         </span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">prop_cores =</span> <span class="fl">0.2</span>,                            </span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">date_tolerance_days =</span> <span class="dv">10</span>,                    </span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_group_size =</span> <span class="dv">10</span>,                         </span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">query =</span> <span class="st">"temperate_shocks"</span>,                  </span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_path =</span>  <span class="fu">file.path</span>(<span class="st">"..."</span>),             </span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">error_log_path =</span> <span class="fu">file.path</span>(<span class="st">"..."</span>)            </span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate shocks with both window schemes</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>climate_shocks_dynamic <span class="ot">&lt;-</span> <span class="fu">shocks_wrapper</span>(</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>  <span class="at">pol_date_pairs =</span> poly_date_df,               </span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">conditions_list =</span> conditions,                </span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col_parquet =</span> <span class="st">"geom_id"</span>,              </span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">geom_id_col_df =</span> <span class="st">"poly_id"</span>,                  </span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  <span class="at">date_id_col_df =</span> <span class="st">"int_date"</span>,                 </span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>  <span class="at">window =</span> <span class="dv">10</span>,                                 </span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>  <span class="at">start =</span> <span class="dv">0</span>,                                   </span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>  <span class="at">hist_lags =</span> <span class="dv">10</span>,                              <span class="co"># Use 10 past years to build the dynamic baseline</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>  <span class="at">align =</span> <span class="st">"right"</span>,                             </span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>  <span class="at">time_step_size =</span> <span class="dv">5</span>,                          </span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>  <span class="at">window_spec =</span> <span class="st">"both"</span>,                        <span class="co"># Create a dynamic and a fixed baseline</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> <span class="st">"1980-01-01"</span>,                   <span class="co"># Initial date for the fixed baseline</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>  <span class="at">stop_date =</span> <span class="st">"1990-01-01"</span>,                    <span class="co"># End date for the fixed baseline         </span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>  <span class="at">disjoint=</span> <span class="cn">FALSE</span>,                             </span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">int_threshold =</span> <span class="fl">0.8</span>,                         </span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>  <span class="at">prop_cores =</span> <span class="fl">0.2</span>,                            </span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>  <span class="at">date_tolerance_days =</span> <span class="dv">10</span>,                    </span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_group_size =</span> <span class="dv">10</span>,                         </span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>  <span class="at">query =</span> <span class="st">"temperate_shocks"</span>,                  </span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>  <span class="at">output_path =</span>  <span class="fu">file.path</span>(<span class="st">"..."</span>),             </span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>  <span class="at">error_log_path =</span> <span class="fu">file.path</span>(<span class="st">"..."</span>)            </span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The <code>shocks_wrapper</code> function will create a parquet file with its results, which will be stored in the folder specified in the <code>output_path</code> argument. Similarly, if any errors are encountered, they will be stored as <code>.Rds</code> objects (lists) in the <code>error_log_path</code>. The function currently keeps track of the following errors: 1. date sequences that fall outside of the date range in dataframe produced by <code>r2e2</code>; 2. geometry dates outside of the dataframe´s range; 3. missing data in the dataframe produced by the <code>r2e2</code> function (e.g., NAs). The function will return a list with the path to the output and the errors list (if this exists). Use <code>arrow::open_dataset(output_path)</code> to access the results.</p>
+</section>
+</section>
+<section id="validating-the-shocks-measures" class="level2">
+<h2 class="anchored" data-anchor-id="validating-the-shocks-measures">Validating the shocks measures</h2>
+<p>The <code>heat</code> package also provides functions to quickly examine the output of the shocks procedure. The three core functions included are: - <strong><code>validate_global_summaries()</code></strong>: given the results datafarame as input, prints the summaries for each shocks measure, as well as NA counts. - <strong><code>validate_errors()</code></strong>: given the errors list as input, structures it for easier access and visualization of errors. If no errors were encountered, a NULL is returned. - <strong><code>validate_measures_distributions()</code></strong>: given the results dataframes as input, plots the distribution for each measure.</p>
+<p><strong>Installation Note for Positron Users</strong>: If you encounter progress bar issues in the Positron IDE, install the development version of <code>progress</code>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"r-lib/progress"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"echolab-stanford/heat"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="citation" class="level2">
+<h2 class="anchored" data-anchor-id="citation">Citation</h2>
+<p>If you use this package in your research, please cite:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>Wallstein, Jonas, Brandon de la Cuesta, and Marshall Burke. </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="st">"Heat: An R Package for Calculating Environmental Exposures"</span>. </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>Zenodo, December <span class="dv">10</span>, <span class="fl">2025.</span> </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>https<span class="sc">:</span><span class="er">//</span>doi.org<span class="sc">/</span><span class="fl">10.5281</span><span class="sc">/</span>zenodo.<span class="fl">17882618.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>BibTeX entry:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bibtex code-with-copy"><code class="sourceCode bibtex"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">@software{wallstein_heat_2025,</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">  author       = {Wallstein, Jonas and de la Cuesta, Brandon and Burke, Marshall},</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">  title        = {Heat: An R Package for Calculating Environmental Exposures},</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">  month        = dec,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co">  year         = 2025,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">  publisher    = {Zenodo},</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">  doi          = {10.5281/zenodo.17882618},</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co">  url          = {https://doi.org/10.5281/zenodo.17882618}</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="issues-contributions" class="level2">
+<h2 class="anchored" data-anchor-id="issues-contributions">Issues &amp; Contributions</h2>
+<p>Report bugs or request features on <a href="https://github.com/echolab-stanford/heat/issues">GitHub Issues</a>.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
